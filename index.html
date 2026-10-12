@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sam Store</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent: #F2B705;
+    --accent-ink: #1A1300;
+    --ok: #22C3A6;
+    --danger: #E6553A;
+    --bg: var(--tg-theme-bg-color, #11121B);
+    --bg2: var(--tg-theme-secondary-bg-color, #181A26);
+    --text: var(--tg-theme-text-color, #ECEDF3);
+    --hint: var(--tg-theme-hint-color, #8C90A6);
+    --line: rgba(255,255,255,0.08);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', -apple-system, system-ui, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  h1,h2,h3,.disp{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.01em; }
+
+  .screen{ display:none; min-height:100vh; padding: 18px 16px 100px; animation: rise .22s ease; }
+  .screen.active{ display:block; }
+  @keyframes rise{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+
+  .crumb{ display:flex; align-items:center; gap:6px; color:var(--hint); font-size:13px; margin-bottom:14px; min-height:18px; }
+  .crumb b{ color:var(--text); font-weight:600; }
+  .crumb .sep{ opacity:.5; }
+
+  .title{ font-size:22px; font-weight:700; margin:2px 0 4px; }
+  .sub{ color:var(--hint); font-size:14px; margin:0 0 18px; line-height:1.5; }
+
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .card{
+    background:var(--bg2); border:1px solid var(--line); border-radius:16px;
+    padding:18px 14px; text-align:left; color:var(--text); cursor:pointer;
+    display:flex; flex-direction:column; gap:10px; min-height:108px; justify-content:space-between;
+  }
+  .card:active{ transform:scale(.97); }
+  .card .emoji{ font-size:26px; }
+  .card .name{ font-weight:600; font-size:15px; line-height:1.25; }
+  .card .count{ font-size:12px; color:var(--hint); }
+
+  .rows{ display:flex; flex-direction:column; gap:9px; }
+  .row{
+    background:var(--bg2); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    cursor:pointer;
+  }
+  .row:active{ transform:scale(.985); }
+  .row .lbl{ font-weight:600; font-size:15px; }
+  .row .meta{ font-size:12px; color:var(--hint); margin-top:2px; }
+  .row .price{
+    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:16px; color:var(--accent);
+    white-space:nowrap;
+  }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:13px; color:var(--hint); margin-bottom:7px; }
+  .field input{
+    width:100%; background:var(--bg2); border:1px solid var(--line); color:var(--text);
+    border-radius:12px; padding:13px 14px; font-size:15px; font-family:inherit;
+  }
+  .field input:focus{ outline:none; border-color:var(--accent); }
+  .hintbox{
+    background:rgba(242,183,5,0.08); border:1px solid rgba(242,183,5,0.25); border-radius:12px;
+    padding:12px 14px; font-size:13px; color:var(--text); line-height:1.5; margin-bottom:18px;
+  }
+
+  .summary{
+    background:var(--bg2); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:18px;
+  }
+  .summary .r{ display:flex; justify-content:space-between; padding:7px 0; font-size:14px; }
+  .summary .r + .r{ border-top:1px solid var(--line); }
+  .summary .r .k{ color:var(--hint); }
+  .summary .r .v{ font-weight:600; text-align:right; max-width:60%; }
+  .summary .total .v{ color:var(--accent); font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }
+
+  .err{ color:var(--danger); font-size:13px; margin:-8px 0 14px; display:none; }
+  .err.show{ display:block; }
+
+  .footer-btn{
+    position:fixed; left:0; right:0; bottom:0; padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(to top, var(--bg) 60%, transparent);
+  }
+  .btn{
+    width:100%; border:none; border-radius:14px; padding:15px; font-size:16px; font-weight:600;
+    background:var(--accent); color:var(--accent-ink); font-family:inherit; cursor:pointer;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn.secondary{ background:var(--bg2); color:var(--text); border:1px solid var(--line); }
+
+  .empty{ text-align:center; padding:60px 20px; color:var(--hint); }
+</style>
+</head>
+<body>
+
+<!-- Screen 0: categories -->
+<section class="screen active" id="screen-home">
+  <div class="title">🛒 ምርት ይምረጡ</div>
+  <p class="sub">ለ eFootball, PUBG, Free Fire እና Gemini በፍጥነት ያዝዙ</p>
+  <div class="grid" id="categoryGrid"></div>
+</section>
+
+<!-- Screen 1: platforms -->
+<section class="screen" id="screen-platform">
+  <div class="crumb"><span id="pf-crumb-cat"></span></div>
+  <div class="title" id="pf-title"></div>
+  <p class="sub">መድረክ ይምረጡ</p>
+  <div class="rows" id="platformList"></div>
+</section>
+
+<!-- Screen 2: packages -->
+<section class="screen" id="screen-package">
+  <div class="crumb" id="pk-crumb"></div>
+  <div class="title" id="pk-title"></div>
+  <p class="sub">ፓኬጅ ይምረጡ</p>
+  <div class="rows" id="packageList"></div>
+</section>
+
+<!-- Screen 3: info form -->
+<section class="screen" id="screen-info">
+  <div class="crumb" id="if-crumb"></div>
+  <div class="title">የመለያ መረጃ</div>
+  <div class="hintbox" id="if-hint"></div>
+
+  <div id="if-fields"></div>
+  <div class="err" id="if-err">እባክዎ ትክክለኛ መረጃ ያስገቡ።</div>
+
+  <div class="summary">
+    <div class="r"><span class="k">ምርት</span><span class="v" id="sum-product"></span></div>
+    <div class="r"><span class="k">ፓኬጅ</span><span class="v" id="sum-package"></span></div>
+    <div class="r total"><span class="k">ጠቅላላ</span><span class="v" id="sum-price"></span></div>
+  </div>
+</section>
+
+<div class="footer-btn" id="footerBtn" style="display:none">
+  <button class="btn" id="mainActionBtn">ቀጥል</button>
+</div>
+
+<script>
+// ---------- Data: mirrors config.py PRODUCT_CATEGORIES ----------
+const PRODUCT_CATEGORIES = [
+  {
+    name: "eFootball Coins", emoji: "⚽", input_type: "email_password",
+    platforms: [
+      { name: "iOS (Konami ID)", packages: [
+        ["300 Coins",550], ["550 Coins",999], ["1040 Coins",1850], ["2130 Coins",3499],
+        ["3250 Coins",4850], ["5700 Coins",8000], ["12800 Coins",17200]
+      ]},
+      { name: "Android", packages: [
+        ["137 Coins",350], ["315 Coins",550], ["578 Coins",999], ["788 Coins",1399],
+        ["1092 Coins",1850], ["2237 Coins",3499], ["3413 Coins",4850], ["5985 Coins",8000],
+        ["13440 Coins",17200]
+      ]}
+    ]
+  },
+  {
+    name: "PUBG UC", emoji: "🔫", input_type: "game_id",
+    packages: [
+      ["60 UC",220], ["325 UC",880], ["660 UC",1720], ["985 UC",2780], ["1320 UC",3550],
+      ["1800 UC",4180], ["2460 UC",5900], ["3850 UC",8650], ["5650 UC",13000], ["8100 UC",17200],
+      ["11950 UC",25500], ["16200 UC",34000], ["24300 UC",51500], ["32400 UC",68500]
+    ]
+  },
+  {
+    name: "Free Fire Diamonds", emoji: "💎", input_type: "game_id",
+    packages: [
+      ["110 Diamonds",180], ["231 Diamonds",375], ["341 Diamonds",550], ["462 Diamonds",750],
+      ["583 Diamonds",935], ["693 Diamonds",1120], ["1188 Diamonds",1840], ["2420 Diamonds",3750]
+    ]
+  },
+  {
+    name: "Gemini Premium", emoji: "✨", input_type: "email_only",
+    packages: [ ["18 ወር",350] ]
+  }
+];
+
+// ---------- Telegram WebApp setup ----------
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+if (tg) { tg.ready(); tg.expand(); }
+
+// ---------- State ----------
+let sel = { cat:null, plat:null, pkg:null };
+
+const screens = {
+  home: document.getElementById('screen-home'),
+  platform: document.getElementById('screen-platform'),
+  package: document.getElementById('screen-package'),
+  info: document.getElementById('screen-info'),
+};
+const footerBtn = document.getElementById('footerBtn');
+const mainActionBtn = document.getElementById('mainActionBtn');
+
+function showScreen(name){
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+  footerBtn.style.display = (name === 'info') ? 'block' : 'none';
+  if (tg) {
+    if (name === 'home') tg.BackButton.hide();
+    else { tg.BackButton.show(); }
+  }
+  window.scrollTo(0,0);
+}
+
+if (tg) {
+  tg.BackButton.onClick(() => {
+    if (screens.info.classList.contains('active')) {
+      const cat = PRODUCT_CATEGORIES[sel.cat];
+      renderPackages(sel.cat, sel.plat);
+      showScreen('package');
+    } else if (screens.package.classList.contains('active')) {
+      const cat = PRODUCT_CATEGORIES[sel.cat];
+      if (cat.platforms) { renderPlatforms(sel.cat); showScreen('platform'); }
+      else { showScreen('home'); }
+    } else if (screens.platform.classList.contains('active')) {
+      showScreen('home');
+    }
+  });
+}
+
+// ---------- Renderers ----------
+function renderCategories(){
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = '';
+  PRODUCT_CATEGORIES.forEach((cat, i) => {
+    const count = cat.platforms
+      ? cat.platforms.reduce((n,p)=>n+p.packages.length,0) + ' ፓኬጆች · 2 መድረክ'
+      : cat.packages.length + ' ፓኬጆች';
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.innerHTML = `<div class="emoji">${cat.emoji}</div><div><div class="name">${cat.name}</div><div class="count">${count}</div></div>`;
+    el.onclick = () => {
+      sel.cat = i; sel.plat = null; sel.pkg = null;
+      if (cat.platforms) { renderPlatforms(i); showScreen('platform'); }
+      else { renderPackages(i, null); showScreen('package'); }
+    };
+    grid.appendChild(el);
+  });
+}
+
+function renderPlatforms(catIdx){
+  const cat = PRODUCT_CATEGORIES[catIdx];
+  document.getElementById('pf-crumb-cat').textContent = `${cat.emoji} ${cat.name}`;
+  document.getElementById('pf-title').textContent = 'መድረክ ይምረጡ';
+  const list = document.getElementById('platformList');
+  list.innerHTML = '';
+  cat.platforms.forEach((p, j) => {
+    const el = document.createElement('div');
+    el.className = 'row';
+    el.innerHTML = `<div class="lbl">${p.name}</div><div class="meta">${p.packages.length} ፓኬጆች ›</div>`;
+    el.onclick = () => { sel.plat = j; renderPackages(catIdx, j); showScreen('package'); };
+    list.appendChild(el);
+  });
+}
+
+function renderPackages(catIdx, platIdx){
+  const cat = PRODUCT_CATEGORIES[catIdx];
+  const packages = (platIdx === null) ? cat.packages : cat.platforms[platIdx].packages;
+  const crumbEl = document.getElementById('pk-crumb');
+  if (platIdx === null) {
+    crumbEl.innerHTML = `<b>${cat.emoji} ${cat.name}</b>`;
+  } else {
+    crumbEl.innerHTML = `<span>${cat.emoji} ${cat.name}</span><span class="sep">›</span><b>${cat.platforms[platIdx].name}</b>`;
+  }
+  document.getElementById('pk-title').textContent = 'ፓኬጅ ይምረጡ';
+  const list = document.getElementById('packageList');
+  list.innerHTML = '';
+  packages.forEach((pkg, k) => {
+    const [label, price] = pkg;
+    const el = document.createElement('div');
+    el.className = 'row';
+    el.innerHTML = `<div><div class="lbl">${label}</div></div><div class="price">${price} ETB</div>`;
+    el.onclick = () => { sel.pkg = k; openInfoForm(); };
+    list.appendChild(el);
+  });
+}
+
+function productDisplayName(){
+  const cat = PRODUCT_CATEGORIES[sel.cat];
+  if (sel.plat === null) return `${cat.emoji} ${cat.name}`;
+  return `${cat.emoji} ${cat.name} - ${cat.platforms[sel.plat].name}`;
+}
+
+function currentPackage(){
+  const cat = PRODUCT_CATEGORIES[sel.cat];
+  const packages = (sel.plat === null) ? cat.packages : cat.platforms[sel.plat].packages;
+  return packages[sel.pkg];
+}
+
+function openInfoForm(){
+  const cat = PRODUCT_CATEGORIES[sel.cat];
+  const [label, price] = currentPackage();
+
+  document.getElementById('if-crumb').innerHTML = `<span>${productDisplayName()}</span><span class="sep">›</span><b>${label}</b>`;
+  document.getElementById('sum-product').textContent = productDisplayName();
+  document.getElementById('sum-package').textContent = label;
+  document.getElementById('sum-price').textContent = price + ' ETB';
+
+  const hint = document.getElementById('if-hint');
+  const fields = document.getElementById('if-fields');
+  fields.innerHTML = '';
+
+  if (cat.input_type === 'email_password') {
+    hint.textContent = '📧 የ Konami Email እና Password ያስገቡ። ይህ መረጃ ኮይኑን ለማስተላለፍ ብቻ ጥቅም ላይ ይውላል።';
+    fields.innerHTML = `
+      <div class="field"><label>Konami Email</label><input id="in-email" type="email" placeholder="email@gmail.com" autocomplete="off"></div>
+      <div class="field"><label>Konami Password</label><input id="in-pass" type="text" placeholder="password" autocomplete="off"></div>`;
+  } else if (cat.input_type === 'email_only') {
+    hint.textContent = '📧 Gemini Premium የሚላክበትን የ Gmail አድራሻ ያስገቡ።';
+    fields.innerHTML = `<div class="field"><label>Gmail አድራሻ</label><input id="in-email" type="email" placeholder="you@gmail.com" autocomplete="off"></div>`;
+  } else {
+    hint.textContent = '🎮 ኮይን/UC/ዳይመንድ የሚገባበትን የጌም አካውንት አይዲ ያስገቡ።';
+    fields.innerHTML = `<div class="field"><label>Game ID</label><input id="in-gameid" type="text" placeholder="123456789" autocomplete="off"></div>`;
+  }
+  document.getElementById('if-err').classList.remove('show');
+  mainActionBtn.textContent = 'ትዕዛዝ አረጋግጥ';
+  showScreen('info');
+}
+
+function collectInfo(){
+  const cat = PRODUCT_CATEGORIES[sel.cat];
+  if (cat.input_type === 'email_password') {
+    const email = document.getElementById('in-email').value.trim();
+    const pass = document.getElementById('in-pass').value.trim();
+    if (!email.includes('@') || pass.length < 1) return null;
+    return `${email} ${pass}`;
+  }
+  if (cat.input_type === 'email_only') {
+    const email = document.getElementById('in-email').value.trim();
+    if (!email.includes('@')) return null;
+    return email;
+  }
+  const gid = document.getElementById('in-gameid').value.trim();
+  if (gid.length < 1) return null;
+  return gid;
+}
+
+mainActionBtn.onclick = () => {
+  const info = collectInfo();
+  const errEl = document.getElementById('if-err');
+  if (!info) { errEl.classList.add('show'); return; }
+  errEl.classList.remove('show');
+
+  const payload = { v:1, cat: sel.cat, plat: (sel.plat===null?-1:sel.plat), pkg: sel.pkg, info: info };
+
+  if (tg && tg.sendData) {
+    tg.sendData(JSON.stringify(payload));
+  } else {
+    alert('ይህ ገጽ በቴሌግራም ውስጥ ብቻ ይሰራል።\n' + JSON.stringify(payload));
+  }
+};
+
+renderCategories();
+if (tg) {
+  tg.onEvent('backButtonClicked', () => {});
+}
+</script>
+</body>
+</html>
