@@ -1,373 +1,71 @@
-<!DOCTYPE html>
-<html lang="am">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sam Store</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --accent: #F2B705;
-    --accent-ink: #1A1300;
-    --ok: #22C3A6;
-    --danger: #E6553A;
-    --bg: var(--tg-theme-bg-color, #11121B);
-    --bg2: var(--tg-theme-secondary-bg-color, #181A26);
-    --text: var(--tg-theme-text-color, #ECEDF3);
-    --hint: var(--tg-theme-hint-color, #8C90A6);
-    --line: rgba(255,255,255,0.08);
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Inter', -apple-system, system-ui, sans-serif;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  h1,h2,h3,.disp{ font-family:'Space Grotesk', sans-serif; letter-spacing:-0.01em; }
-
-  .screen{ display:none; min-height:100vh; padding: 18px 16px 100px; animation: rise .22s ease; }
-  .screen.active{ display:block; }
-  @keyframes rise{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
-
-  .crumb{ display:flex; align-items:center; gap:6px; color:var(--hint); font-size:13px; margin-bottom:14px; min-height:18px; }
-  .crumb b{ color:var(--text); font-weight:600; }
-  .crumb .sep{ opacity:.5; }
-
-  .title{ font-size:22px; font-weight:700; margin:2px 0 4px; }
-  .sub{ color:var(--hint); font-size:14px; margin:0 0 18px; line-height:1.5; }
-
-  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .card{
-    background:var(--bg2); border:1px solid var(--line); border-radius:16px;
-    padding:18px 14px; text-align:left; color:var(--text); cursor:pointer;
-    display:flex; flex-direction:column; gap:10px; min-height:108px; justify-content:space-between;
-  }
-  .card:active{ transform:scale(.97); }
-  .card .emoji{ font-size:26px; }
-  .card .name{ font-weight:600; font-size:15px; line-height:1.25; }
-  .card .count{ font-size:12px; color:var(--hint); }
-
-  .rows{ display:flex; flex-direction:column; gap:9px; }
-  .row{
-    background:var(--bg2); border:1px solid var(--line); border-radius:14px;
-    padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px;
-    cursor:pointer;
-  }
-  .row:active{ transform:scale(.985); }
-  .row .lbl{ font-weight:600; font-size:15px; }
-  .row .meta{ font-size:12px; color:var(--hint); margin-top:2px; }
-  .row .price{
-    font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:16px; color:var(--accent);
-    white-space:nowrap;
-  }
-
-  .field{ margin-bottom:16px; }
-  .field label{ display:block; font-size:13px; color:var(--hint); margin-bottom:7px; }
-  .field input{
-    width:100%; background:var(--bg2); border:1px solid var(--line); color:var(--text);
-    border-radius:12px; padding:13px 14px; font-size:15px; font-family:inherit;
-  }
-  .field input:focus{ outline:none; border-color:var(--accent); }
-  .hintbox{
-    background:rgba(242,183,5,0.08); border:1px solid rgba(242,183,5,0.25); border-radius:12px;
-    padding:12px 14px; font-size:13px; color:var(--text); line-height:1.5; margin-bottom:18px;
-  }
-
-  .summary{
-    background:var(--bg2); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:18px;
-  }
-  .summary .r{ display:flex; justify-content:space-between; padding:7px 0; font-size:14px; }
-  .summary .r + .r{ border-top:1px solid var(--line); }
-  .summary .r .k{ color:var(--hint); }
-  .summary .r .v{ font-weight:600; text-align:right; max-width:60%; }
-  .summary .total .v{ color:var(--accent); font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; }
-
-  .err{ color:var(--danger); font-size:13px; margin:-8px 0 14px; display:none; }
-  .err.show{ display:block; }
-
-  .footer-btn{
-    position:fixed; left:0; right:0; bottom:0; padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
-    background:linear-gradient(to top, var(--bg) 60%, transparent);
-  }
-  .btn{
-    width:100%; border:none; border-radius:14px; padding:15px; font-size:16px; font-weight:600;
-    background:var(--accent); color:var(--accent-ink); font-family:inherit; cursor:pointer;
-  }
-  .btn:active{ transform:scale(.98); }
-  .btn.secondary{ background:var(--bg2); color:var(--text); border:1px solid var(--line); }
-
-  .empty{ text-align:center; padding:60px 20px; color:var(--hint); }
-</style>
-</head>
-<body>
-
-<!-- Screen 0: categories -->
-<section class="screen active" id="screen-home">
-  <div class="title">🛒 ምርት ይምረጡ</div>
-  <p class="sub">ለ eFootball, PUBG, Free Fire እና Gemini በፍጥነት ያዝዙ</p>
-  <div class="grid" id="categoryGrid"></div>
-</section>
-
-<!-- Screen 1: platforms -->
-<section class="screen" id="screen-platform">
-  <div class="crumb"><span id="pf-crumb-cat"></span></div>
-  <div class="title" id="pf-title"></div>
-  <p class="sub">መድረክ ይምረጡ</p>
-  <div class="rows" id="platformList"></div>
-</section>
-
-<!-- Screen 2: packages -->
-<section class="screen" id="screen-package">
-  <div class="crumb" id="pk-crumb"></div>
-  <div class="title" id="pk-title"></div>
-  <p class="sub">ፓኬጅ ይምረጡ</p>
-  <div class="rows" id="packageList"></div>
-</section>
-
-<!-- Screen 3: info form -->
-<section class="screen" id="screen-info">
-  <div class="crumb" id="if-crumb"></div>
-  <div class="title">የመለያ መረጃ</div>
-  <div class="hintbox" id="if-hint"></div>
-
-  <div id="if-fields"></div>
-  <div class="err" id="if-err">እባክዎ ትክክለኛ መረጃ ያስገቡ።</div>
-
-  <div class="summary">
-    <div class="r"><span class="k">ምርት</span><span class="v" id="sum-product"></span></div>
-    <div class="r"><span class="k">ፓኬጅ</span><span class="v" id="sum-package"></span></div>
-    <div class="r total"><span class="k">ጠቅላላ</span><span class="v" id="sum-price"></span></div>
-  </div>
-</section>
-
-<div class="footer-btn" id="footerBtn" style="display:none">
-  <button class="btn" id="mainActionBtn">ቀጥል</button>
-</div>
-
+<!DOCTYPE html><html lang="am"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sam Store</title><link rel="stylesheet" href="style.css"></head><body><main id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script>
 <script>
-// ---------- Data: mirrors config.py PRODUCT_CATEGORIES ----------
-const PRODUCT_CATEGORIES = [
-  {
-    name: "eFootball Coins", emoji: "⚽", input_type: "email_password",
-    platforms: [
-      { name: "iOS (Konami ID)", packages: [
-        ["300 Coins",550], ["550 Coins",999], ["1040 Coins",1850], ["2130 Coins",3499],
-        ["3250 Coins",4850], ["5700 Coins",8000], ["12800 Coins",17200]
-      ]},
-      { name: "Android", packages: [
-        ["137 Coins",350], ["315 Coins",550], ["578 Coins",999], ["788 Coins",1399],
-        ["1092 Coins",1850], ["2237 Coins",3499], ["3413 Coins",4850], ["5985 Coins",8000],
-        ["13440 Coins",17200]
-      ]}
-    ]
-  },
-  {
-    name: "PUBG UC", emoji: "🔫", input_type: "game_id",
-    packages: [
-      ["60 UC",220], ["325 UC",880], ["660 UC",1720], ["985 UC",2780], ["1320 UC",3550],
-      ["1800 UC",4180], ["2460 UC",5900], ["3850 UC",8650], ["5650 UC",13000], ["8100 UC",17200],
-      ["11950 UC",25500], ["16200 UC",34000], ["24300 UC",51500], ["32400 UC",68500]
-    ]
-  },
-  {
-    name: "Free Fire Diamonds", emoji: "💎", input_type: "game_id",
-    packages: [
-      ["110 Diamonds",180], ["231 Diamonds",375], ["341 Diamonds",550], ["462 Diamonds",750],
-      ["583 Diamonds",935], ["693 Diamonds",1120], ["1188 Diamonds",1840], ["2420 Diamonds",3750]
-    ]
-  },
-  {
-    name: "Gemini Premium", emoji: "✨", input_type: "email_only",
-    packages: [ ["18 ወር",350] ]
-  }
-];
-
-// ---------- Telegram WebApp setup ----------
-const tg = window.Telegram ? window.Telegram.WebApp : null;
-if (tg) { tg.ready(); tg.expand(); }
-
-// ---------- State ----------
-let sel = { cat:null, plat:null, pkg:null };
-
-const screens = {
-  home: document.getElementById('screen-home'),
-  platform: document.getElementById('screen-platform'),
-  package: document.getElementById('screen-package'),
-  info: document.getElementById('screen-info'),
-};
-const footerBtn = document.getElementById('footerBtn');
-const mainActionBtn = document.getElementById('mainActionBtn');
-
-function showScreen(name){
-  Object.values(screens).forEach(s => s.classList.remove('active'));
-  screens[name].classList.add('active');
-  footerBtn.style.display = (name === 'info') ? 'block' : 'none';
-  if (tg) {
-    if (name === 'home') tg.BackButton.hide();
-    else { tg.BackButton.show(); }
-  }
-  window.scrollTo(0,0);
-}
-
-if (tg) {
-  tg.BackButton.onClick(() => {
-    if (screens.info.classList.contains('active')) {
-      const cat = PRODUCT_CATEGORIES[sel.cat];
-      renderPackages(sel.cat, sel.plat);
-      showScreen('package');
-    } else if (screens.package.classList.contains('active')) {
-      const cat = PRODUCT_CATEGORIES[sel.cat];
-      if (cat.platforms) { renderPlatforms(sel.cat); showScreen('platform'); }
-      else { showScreen('home'); }
-    } else if (screens.platform.classList.contains('active')) {
-      showScreen('home');
-    }
-  });
-}
-
-// ---------- Renderers ----------
-function renderCategories(){
-  const grid = document.getElementById('categoryGrid');
-  grid.innerHTML = '';
-  PRODUCT_CATEGORIES.forEach((cat, i) => {
-    const count = cat.platforms
-      ? cat.platforms.reduce((n,p)=>n+p.packages.length,0) + ' ፓኬጆች · 2 መድረክ'
-      : cat.packages.length + ' ፓኬጆች';
-    const el = document.createElement('div');
-    el.className = 'card';
-    el.innerHTML = `<div class="emoji">${cat.emoji}</div><div><div class="name">${cat.name}</div><div class="count">${count}</div></div>`;
-    el.onclick = () => {
-      sel.cat = i; sel.plat = null; sel.pkg = null;
-      if (cat.platforms) { renderPlatforms(i); showScreen('platform'); }
-      else { renderPackages(i, null); showScreen('package'); }
-    };
-    grid.appendChild(el);
-  });
-}
-
-function renderPlatforms(catIdx){
-  const cat = PRODUCT_CATEGORIES[catIdx];
-  document.getElementById('pf-crumb-cat').textContent = `${cat.emoji} ${cat.name}`;
-  document.getElementById('pf-title').textContent = 'መድረክ ይምረጡ';
-  const list = document.getElementById('platformList');
-  list.innerHTML = '';
-  cat.platforms.forEach((p, j) => {
-    const el = document.createElement('div');
-    el.className = 'row';
-    el.innerHTML = `<div class="lbl">${p.name}</div><div class="meta">${p.packages.length} ፓኬጆች ›</div>`;
-    el.onclick = () => { sel.plat = j; renderPackages(catIdx, j); showScreen('package'); };
-    list.appendChild(el);
-  });
-}
-
-function renderPackages(catIdx, platIdx){
-  const cat = PRODUCT_CATEGORIES[catIdx];
-  const packages = (platIdx === null) ? cat.packages : cat.platforms[platIdx].packages;
-  const crumbEl = document.getElementById('pk-crumb');
-  if (platIdx === null) {
-    crumbEl.innerHTML = `<b>${cat.emoji} ${cat.name}</b>`;
-  } else {
-    crumbEl.innerHTML = `<span>${cat.emoji} ${cat.name}</span><span class="sep">›</span><b>${cat.platforms[platIdx].name}</b>`;
-  }
-  document.getElementById('pk-title').textContent = 'ፓኬጅ ይምረጡ';
-  const list = document.getElementById('packageList');
-  list.innerHTML = '';
-  packages.forEach((pkg, k) => {
-    const [label, price] = pkg;
-    const el = document.createElement('div');
-    el.className = 'row';
-    el.innerHTML = `<div><div class="lbl">${label}</div></div><div class="price">${price} ETB</div>`;
-    el.onclick = () => { sel.pkg = k; openInfoForm(); };
-    list.appendChild(el);
-  });
-}
-
-function productDisplayName(){
-  const cat = PRODUCT_CATEGORIES[sel.cat];
-  if (sel.plat === null) return `${cat.emoji} ${cat.name}`;
-  return `${cat.emoji} ${cat.name} - ${cat.platforms[sel.plat].name}`;
-}
-
-function currentPackage(){
-  const cat = PRODUCT_CATEGORIES[sel.cat];
-  const packages = (sel.plat === null) ? cat.packages : cat.platforms[sel.plat].packages;
-  return packages[sel.pkg];
-}
-
-function openInfoForm(){
-  const cat = PRODUCT_CATEGORIES[sel.cat];
-  const [label, price] = currentPackage();
-
-  document.getElementById('if-crumb').innerHTML = `<span>${productDisplayName()}</span><span class="sep">›</span><b>${label}</b>`;
-  document.getElementById('sum-product').textContent = productDisplayName();
-  document.getElementById('sum-package').textContent = label;
-  document.getElementById('sum-price').textContent = price + ' ETB';
-
-  const hint = document.getElementById('if-hint');
-  const fields = document.getElementById('if-fields');
-  fields.innerHTML = '';
-
-  if (cat.input_type === 'email_password') {
-    hint.textContent = '📧 የ Konami Email እና Password ያስገቡ። ይህ መረጃ ኮይኑን ለማስተላለፍ ብቻ ጥቅም ላይ ይውላል።';
-    fields.innerHTML = `
-      <div class="field"><label>Konami Email</label><input id="in-email" type="email" placeholder="email@gmail.com" autocomplete="off"></div>
-      <div class="field"><label>Konami Password</label><input id="in-pass" type="text" placeholder="password" autocomplete="off"></div>`;
-  } else if (cat.input_type === 'email_only') {
-    hint.textContent = '📧 Gemini Premium የሚላክበትን የ Gmail አድራሻ ያስገቡ።';
-    fields.innerHTML = `<div class="field"><label>Gmail አድራሻ</label><input id="in-email" type="email" placeholder="you@gmail.com" autocomplete="off"></div>`;
-  } else {
-    hint.textContent = '🎮 ኮይን/UC/ዳይመንድ የሚገባበትን የጌም አካውንት አይዲ ያስገቡ።';
-    fields.innerHTML = `<div class="field"><label>Game ID</label><input id="in-gameid" type="text" placeholder="123456789" autocomplete="off"></div>`;
-  }
-  document.getElementById('if-err').classList.remove('show');
-  mainActionBtn.textContent = 'ትዕዛዝ አረጋግጥ';
-  showScreen('info');
-}
-
-function collectInfo(){
-  const cat = PRODUCT_CATEGORIES[sel.cat];
-  if (cat.input_type === 'email_password') {
-    const email = document.getElementById('in-email').value.trim();
-    const pass = document.getElementById('in-pass').value.trim();
-    if (!email.includes('@') || pass.length < 1) return null;
-    return `${email} ${pass}`;
-  }
-  if (cat.input_type === 'email_only') {
-    const email = document.getElementById('in-email').value.trim();
-    if (!email.includes('@')) return null;
-    return email;
-  }
-  const gid = document.getElementById('in-gameid').value.trim();
-  if (gid.length < 1) return null;
-  return gid;
-}
-
-mainActionBtn.onclick = () => {
-  const info = collectInfo();
-  const errEl = document.getElementById('if-err');
-  if (!info) { errEl.classList.add('show'); return; }
-  errEl.classList.remove('show');
-
-  const payload = { v:1, cat: sel.cat, plat: (sel.plat===null?-1:sel.plat), pkg: sel.pkg, info: info };
-
-  if (tg && tg.sendData) {
-    tg.sendData(JSON.stringify(payload));
-  } else {
-    alert('ይህ ገጽ በቴሌግራም ውስጥ ብቻ ይሰራል።\n' + JSON.stringify(payload));
-  }
-};
-
-renderCategories();
-if (tg) {
-  tg.onEvent('backButtonClicked', () => {});
-}
-</script>
-</body>
-</html>
+const sb=supabase.createClient(CFG.URL,CFG.KEY),A=document.getElementById('app');
+const CATS={ef:['⚽','eFootball Coins','ep'],pubg:['🔫','PUBG UC','id'],ff:['💎','Free Fire Diamonds','id'],gem:['✨','Gemini Premium','em']};
+const ST={pending:'⏳ ክፍያ ይጠበቃል',awaiting_review:'🔎 ደረሰኝ በማረጋገጥ ላይ',approved:'✅ ተረጋግጧል፣ በማድረስ ላይ',delivered:'🎉 ደርሷል! መልካም ጨዋታ',rejected:'❌ አልተረጋገጠም፣ ድጋፍ ያግኙን'};
+let cat=[],timer;
+const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mine=()=>JSON.parse(localStorage.getItem('sam_orders')||'[]');
+const go=(h,back)=>{clearInterval(timer);A.innerHTML=(back?'<button class="back" id="bk">← ተመለስ</button>':'')+h;if(back)document.getElementById('bk').onclick=back;scrollTo(0,0)};
+async function init(){
+ const{data,error}=await sb.from('catalog').select('*').order('id');
+ if(error){go('<p class="err">መረጃ ማምጣት አልተቻለም። እንደገና ይሞክሩ።</p>');return}
+ cat=data;const o=new URLSearchParams(location.search).get('o');o?status(o):home()}
+function home(){
+ const ks=[...new Set(cat.map(c=>c.cat))];
+ go('<h1>🛒 Sam Store</h1><p class="sub">ምርት ይምረጡ</p><div class="grid">'+ks.map(k=>`<button class="card" data-k="${k}"><b>${CATS[k][0]}</b><span>${CATS[k][1]}</span></button>`).join('')+'</div>'+(mine().length?'<button class="btn s" id="my">📋 ትዕዛዞቼ</button>':''));
+ A.querySelectorAll('.card').forEach(b=>b.onclick=()=>plats(b.dataset.k));
+ if(mine().length)document.getElementById('my').onclick=myOrders}
+function plats(k){
+ const ps=[...new Set(cat.filter(c=>c.cat==k).map(c=>c.plat))];
+ if(ps[0]===null)return pkgs(k,null,home);
+ go(`<h1>${CATS[k][0]} ${CATS[k][1]}</h1><p class="sub">መድረክ ይምረጡ</p><div class="rows">`+ps.map(p=>`<button class="row" data-p="${E(p)}">${E(p)} ›</button>`).join('')+'</div>',home);
+ A.querySelectorAll('.row').forEach(b=>b.onclick=()=>pkgs(k,b.dataset.p,()=>plats(k)))}
+function pkgs(k,p,back){
+ const L=cat.filter(c=>c.cat==k&&c.plat==p);
+ go(`<h1>${CATS[k][0]} ${E(L[0].title)}</h1><p class="sub">ፓኬጅ ይምረጡ</p><div class="rows">`+L.map(c=>`<button class="row" data-i="${c.id}"><span>${E(c.label)}</span><span class="p">${c.price} ETB</span></button>`).join('')+'</div>',back);
+ A.querySelectorAll('.row').forEach(b=>b.onclick=()=>form(L.find(c=>c.id==b.dataset.i),back))}
+function form(c,back){
+ const t=CATS[c.cat][2];
+ const f=t=='ep'?'<label>Konami Email</label><input id="i1" type="email" autocomplete="off"><label>Konami Password</label><input id="i2" autocomplete="off">':t=='em'?'<label>Gmail አድራሻ</label><input id="i1" type="email">':'<label>Game ID</label><input id="i1" inputmode="numeric" autocomplete="off">';
+ go(`<h1>የመለያ መረጃ</h1><div class="box">${E(c.title)}<br>${E(c.label)} · <span class="p">${c.price} ETB</span></div>${f}<div class="err" id="er"></div><button class="btn" id="go">ትዕዛዝ ላክ</button>`,back);
+ document.getElementById('go').onclick=async e=>{
+  const a=i1.value.trim(),b=t=='ep'?i2.value.trim():'';
+  if(!a||(t!='id'&&!a.includes('@'))||(t=='ep'&&!b)){er.textContent='እባክዎ ትክክለኛ መረጃ ያስገቡ።';return}
+  e.target.disabled=true;
+  const{data,error}=await sb.rpc('create_order',{p_id:c.id,p_info:b?a+' '+b:a});
+  if(error){er.textContent='ስህተት ተፈጥሯል፣ እንደገና ይሞክሩ።';e.target.disabled=false;return}
+  localStorage.setItem('sam_orders',JSON.stringify([data,...mine()]));pay(data,c)}}
+async function pay(code,c){
+ if(!c){const{data}=await sb.rpc('get_order',{p_code:code});c={label:data.package,price:data.amount}}
+ go(`<h1>💰 ክፍያ</h1><div class="hint">ትዕዛዝ ቁጥር <b>${code}</b> (ያስቀምጡት)</div><div class="box">ወደ Telebirr <span class="big">${CFG.TELEBIRR}</span> <br>መጠን፦ <span class="big">${c.price} ETB</span></div><p>ከከፈሉ በኋላ ከታች ይሙሉ፦</p><label>የ Telebirr ግብይት ቁጥር (Transaction ID)</label><input id="tx" autocomplete="off"><label>የደረሰኝ ፎቶ (screenshot)</label><input id="fl" type="file" accept="image/*"><div class="err" id="er"></div><button class="btn" id="sd">ደረሰኝ ላክ</button>`,()=>status(code));
+ sd.onclick=async()=>{
+  const t=tx.value.trim(),f=fl.files[0];
+  if(t.length<6||!f){er.textContent='የግብይት ቁጥር እና የደረሰኝ ፎቶ ያስፈልጋል።';return}
+  sd.disabled=true;sd.textContent='በመላክ ላይ...';
+  try{
+   const blob=await shrink(f),path=code+'.jpg';
+   const u=await sb.storage.from('receipts').upload(path,blob,{contentType:'image/jpeg'});
+   if(u.error&&!/exist/i.test(u.error.message))throw u.error;
+   const r=await sb.rpc('attach_receipt',{p_code:code,p_txn:t,p_path:path});
+   if(r.error)throw r.error;status(code)
+  }catch(x){er.textContent=/DUP/.test(x.message)?'ይህ የግብይት ቁጥር ቀደም ብሎ ጥቅም ላይ ውሏል።':'መላክ አልተቻለም፣ እንደገና ይሞክሩ።';sd.disabled=false;sd.textContent='ደረሰኝ ላክ'}}}
+const shrink=f=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,1400/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(ok,'image/jpeg',.8)};i.onerror=no;i.src=URL.createObjectURL(f)});
+async function status(code){
+ const draw=async()=>{
+  const{data}=await sb.rpc('get_order',{p_code:code});
+  if(!data){go('<p class="err">ትዕዛዝ አልተገኘም።</p><button class="btn s" id="h">መነሻ</button>');h.onclick=home;return}
+  const keep=document.activeElement;
+  go(`<h1>ትዕዛዝ ${data.code}</h1><div class="box">${E(data.product)}<br>${E(data.package)} · <span class="p">${data.amount} ETB</span><div class="st">${ST[data.status]}</div></div>`+(data.status=='pending'?'<button class="btn" id="pp">💰 ክፍያ ፈጽሜያለሁ፣ ደረሰኝ ላክ</button>':'')+'<button class="btn s" id="h">መነሻ ገጽ</button>');
+  h.onclick=()=>{history.replaceState(0,'',location.pathname);home()};
+  if(data.status=='pending')pp.onclick=()=>pay(code,{price:data.amount});
+  else if(!['delivered','rejected'].includes(data.status))timer=setInterval(()=>draw(),8000)};
+ await draw()}
+async function myOrders(){
+ go('<h1>📋 ትዕዛዞቼ</h1><div class="rows" id="ls">...</div>',home);
+ const r=await Promise.all(mine().map(c=>sb.rpc('get_order',{p_code:c})));
+ ls.innerHTML=r.map(x=>x.data).filter(Boolean).map(d=>`<button class="row" data-c="${d.code}"><span>${E(d.package)}<br><small>${ST[d.status]}</small></span><span class="p">${d.amount}</span></button>`).join('')||'ባዶ ነው';
+ ls.querySelectorAll('.row').forEach(b=>b.onclick=()=>status(b.dataset.c))}
+init();
+</script></body></html>
