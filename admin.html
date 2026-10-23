@@ -10,7 +10,7 @@ function login(m=''){
  lg.onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:em.value.trim(),password:pw.value});error?login('ኢሜል ወይም ይለፍ ቃል ትክክል አይደለም'):start()}}
 async function start(){
  const{data}=await sb.auth.getSession();if(!data.session)return login();
- me=data.session.user.id;await load();clearInterval(tm);tm=setInterval(load,10000)}
+ me=data.session.user.id;const ok=await sb.rpc('is_admin');if(!ok.data){await sb.auth.signOut();return login('ይህ መለያ አድሚን አይደለም')}await load();clearInterval(tm);tm=setInterval(load,10000)}
 function beep(){try{const c=new AudioContext(),o=c.createOscillator();o.connect(c.destination);o.frequency.value=880;o.start();o.stop(c.currentTime+.3)}catch{}}
 async function load(){
  const{data,error}=await sb.from('orders').select('*').order('id',{ascending:false}).limit(150);
@@ -29,7 +29,7 @@ function card(o){
  let b='';
  if(o.status=='awaiting_review')b=`<div class="mini"><button class="btn" data-a="ok" data-id="${o.id}">✅ አጽድቅ</button><button class="btn s" data-a="no" data-id="${o.id}">❌ አትቀበል</button></div>`;
  if(o.status=='approved')b=!o.claimed_by?`<button class="btn" data-a="claim" data-id="${o.id}">🙋 እኔ አደርሳለሁ</button>`:o.claimed_by==me?`<button class="btn" data-a="done" data-id="${o.id}">✅ ደርሷል</button>`:`<p>🔒 በ ${E(o.claimed_by_name)} ተይዟል</p>`;
- return `<div class="box o"><b>#${o.id}</b> · <code>${o.code}</code> · <small>${new Date(o.created_at).toLocaleString()}</small><br>${E(o.product)} — ${E(o.package)}<br>💰 <span class="p">${o.amount} ETB</span><br>🔑 <code>${E(o.info)}</code><br>🆔 TXN: <code>${E(o.txn_id||'-')}</code>`+(o.receipt_path?`<br><button class="btn s" data-r="${o.receipt_path}" style="margin-top:8px">🖼 ደረሰኝ አሳይ</button><div></div>`:'')+b+'</div>'}
+ return `<div class="box o"><b>#${o.id}</b> · <code>${o.code}</code> · <small>${new Date(o.created_at).toLocaleString()}</small><br>${E(o.product)} — ${E(o.package)}<br>💰 <span class="p">${o.amount} ETB</span><br>📞 ${E(o.phone)}<br>🔑 <code>${E(o.info)}</code><br>🆔 TXN: <code>${E(o.txn_id||'-')}</code>`+(o.receipt_path?`<br><button class="btn s" data-r="${o.receipt_path}" style="margin-top:8px">🖼 ደረሰኝ አሳይ</button><div></div>`:'')+b+'</div>'}
 async function receipt(b){
  const{data}=await sb.storage.from('receipts').createSignedUrl(b.dataset.r,300);
  if(data)b.nextElementSibling.innerHTML=`<img src="${data.signedUrl}">`}

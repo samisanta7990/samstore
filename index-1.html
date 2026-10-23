@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="am"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Sam Store</title><link rel="stylesheet" href="style.css"></head><body><main id="v"></main>
+<nav><button data-t="home" onclick="home()">🏠<br>Home</button><button data-t="coins" onclick="coins()">🪙<br>Coins</button><button data-t="players" onclick="players()">👥<br>Players</button><button data-t="track" onclick="track()">📍<br>Track</button><button data-t="acc" onclick="account()">👤<br>Account</button></nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script>
+<script>
+const sb=supabase.createClient(CFG.URL,CFG.KEY),V=document.getElementById('v'),$=i=>document.getElementById(i);
+const G={ef:'⚽ eFootball',pubg:'🔫 PUBG',ff:'💎 Free Fire',gem:'✨ Gemini'};
+const ST={pending:'⏳ ክፍያ ይጠበቃል',awaiting_review:'🔎 ደረሰኝ በማረጋገጥ ላይ',approved:'✅ ተረጋግጧል፣ በማድረስ ላይ',delivered:'🎉 ደርሷል! መልካም ጨዋታ',rejected:'❌ አልተረጋገጠም፣ ድጋፍ ያግኙን'};
+const ERR={LOGIN:'ለዚህ መጀመሪያ መግባት ያስፈልጋል።',SOLD:'ይህ ተሽጧል።',ONCE:'ይህን አስቀድመው ገዝተዋል።',BAD:'መረጃው ትክክል አይደለም።'};
+let C=[],U=null,T,S={g:'ef',R:'normal',P:'android',q:'',k:'player'};
+const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mine=()=>JSON.parse(localStorage.sam2||'[]');
+const save=(c,p)=>localStorage.sam2=JSON.stringify([{c,p},...mine().filter(o=>o.c!=c)]);
+const bk=f=>`<button class="back" onclick="${f}()">← ተመለስ</button>`;
+function show(h,t){clearInterval(T);V.innerHTML=h;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));scrollTo(0,0)}
+const isA=c=>c.cat=='player'||c.cat=='manager';
+const row=c=>`<div class="row" onclick="buy(${c.id})"><div><b>${E(c.label)}</b><br><small>${E(c.title)}</small></div><div class="p">${c.price} ETB</div></div>`;
+const pc=c=>`<div class="box">${c.img?`<img class="pi" src="${E(c.img)}" alt="">`:''}<small class="p">${E(c.label)}</small><h3>${E(c.title)}</h3><small>1 ሰው 1 ጊዜ · ውስን ክምችት</small><div class="mini" style="display:flex;margin-top:8px"><span class="big">${c.price} ETB</span>${c.stock>0?`<button class="btn" style="width:auto;margin:0;padding:10px 22px" onclick="buy(${c.id})">ግዛ</button>`:'<b>ተሽጧል</b>'}</div></div>`;
+async function load(){const{data,error}=await sb.from('catalog').select('*').order('id');if(!error)C=data;return!error}
+function home(){
+ const co=C.filter(c=>c.cat=='ef'&&c.region=='normal').slice(0,4),pl=C.filter(c=>c.cat=='player').slice(0,3),mg=C.filter(c=>c.cat=='manager').slice(0,2);
+ show(`<div class="k">ETHIOPIA / eFOOTBALL</div><div class="hero">ኮይን ይሙሉ። ተጫዋች እና ማናጀር አካውንት ይግዙ። ትዕዛዝዎን ይከታተሉ።</div><p class="sub">በ Telebirr ይክፈሉ፣ ደረሰኝ ይላኩ፣ በእጅ አረጋግጠን እናደርሳለን።</p><button class="btn" onclick="coins()">🪙 ሳንቲሞች ይመልከቱ</button><button class="btn s" onclick="players()">👥 ተጫዋች አካውንቶች</button><button class="btn s" onclick="track()">📍 ትዕዛዝ ተከታተል</button>`+
+ `<div class="sec"><h2>Coin packs</h2><a onclick="coins()">ሁሉንም ›</a></div><div class="rows">${co.map(row).join('')}</div>`+
+ (pl.length?`<div class="sec"><h2>Player accounts</h2><a onclick="players()">ሁሉንም ›</a></div>${pl.map(pc).join('')}`:'')+
+ (mg.length?`<div class="sec"><h2>Manager accounts</h2><a onclick="S.k='manager';players()">ሁሉንም ›</a></div>${mg.map(pc).join('')}`:''),'home')}
+const seg=(k,o,f)=>o.map(([v,l])=>`<button class="${S[k]==v?'on':''}" onclick="S.${k}='${v}';${f}()">${l}</button>`).join('');
+function coins(){
+ show(`<h1>🪙 Coins</h1><div class="tabs">${seg('g',Object.entries(G),'coins')}</div>`+(S.g=='ef'?`<div class="tabs">${seg('R',[['normal','Normal'],['japan','Japan']],'coins')}${seg('P',[['android','🤖 Android'],['ios','🍎 iOS']],'coins')}</div>`:'')+`<input id="q" placeholder="ፈልግ... 130, 578" value="${E(S.q)}" oninput="S.q=this.value;list()"><div class="rows" id="ls" style="margin-top:12px"></div>`,'coins');list()}
+function list(){const q=S.q.toLowerCase();
+ $('ls').innerHTML=C.filter(c=>c.cat==S.g&&(S.g!='ef'||(c.region==S.R&&(c.platform=='all'||c.platform==S.P)))&&c.label.toLowerCase().includes(q)).map(row).join('')||'<p class="sub">ምንም የለም</p>'}
+async function players(){
+ await load();const L=C.filter(c=>c.cat==S.k);
+ show(`<h1>👥 Accounts</h1><p class="sub">ዝግጁ eFootball አካውንቶች። እያንዳንዱን አንድ ጊዜ ብቻ መግዛት ይችላሉ። ለመግዛት መግባት ያስፈልጋል።</p><div class="tabs">${seg('k',[['player','Players'],['manager','Managers']],'players')}</div>${L.map(pc).join('')||'<p class="sub">ምንም የለም</p>'}`,'players')}
+function buy(id){
+ const c=C.find(x=>x.id==id);S.last=c;if(isA(c)&&!U)return account('ለመግዛት መጀመሪያ ይግቡ ወይም አካውንት ይክፈቱ።');
+ const f=c.cat=='ef'?'<label>Konami Email</label><input id="i1" type="email" autocomplete="off"><label>Konami Password</label><input id="i2" autocomplete="off">':c.cat=='gem'?'<label>Gmail አድራሻ</label><input id="i1" type="email">':isA(c)?'<div class="hint">የአካውንቱ መረጃ ክፍያው ከተረጋገጠ በኋላ ወደ ስልክ ቁጥርዎ ይላካል።</div>':'<label>Game ID</label><input id="i1" inputmode="numeric" autocomplete="off">';
+ show(`${bk('back0')}<h1>ትዕዛዝ</h1><div class="box">${E(c.title)}<br>${E(c.label)} · <span class="p">${c.price} ETB</span></div>${f}<label>ስልክ ቁጥር (09... ወይም 07...)</label><input id="ph" inputmode="tel" value="${E(localStorage.samph||'')}"><div class="err" id="er"></div><button class="btn" id="go" onclick="send(${id})">ትዕዛዝ ላክ</button>`,'')}
+function back0(){S.last&&isA(S.last)?players():coins()}
+async function send(id){
+ const c=C.find(x=>x.id==id),a=($('i1')?.value||'').trim(),b=($('i2')?.value||'').trim(),p=$('ph').value.trim();
+ const info=isA(c)?'-':c.cat=='ef'?a+' '+b:a;
+ if(!isA(c)&&(!a||(c.cat=='ef'&&!b)||((c.cat=='ef'||c.cat=='gem')&&!a.includes('@')))||!/^0[79]\d{8}$/.test(p)){$('er').textContent='እባክዎ ትክክለኛ መረጃ እና ስልክ ቁጥር ያስገቡ።';return}
+ $('go').disabled=true;
+ const{data,error}=await sb.rpc('create_order',{p_id:id,p_info:info,p_phone:p});
+ if(error){$('er').textContent=ERR[(error.message.match(/LOGIN|SOLD|ONCE|BAD/)||['BAD'])[0]];$('go').disabled=false;return}
+ localStorage.samph=p;save(data,p);pay(data,p,c.price)}
+function pay(code,p,price){
+ show(`<h1>💰 ክፍያ</h1><div class="hint">ትዕዛዝ ቁጥር <b>${code}</b> (ያስቀምጡት)</div><div class="box">ወደ Telebirr <span class="big">${CFG.TELEBIRR}</span><br>መጠን፦ <span class="big">${price} ETB</span></div><p>ከከፈሉ በኋላ ይሙሉ፦</p><label>የ Telebirr ግብይት ቁጥር (Transaction ID)</label><input id="tx" autocomplete="off"><label>የደረሰኝ ፎቶ (screenshot)</label><input id="fl" type="file" accept="image/*"><div class="err" id="er"></div><button class="btn" id="sd">ደረሰኝ ላክ</button><button class="btn s" onclick="status('${code}','${p}')">በኋላ እልካለሁ</button>`,'');
+ $('sd').onclick=async()=>{const t=$('tx').value.trim(),f=$('fl').files[0];
+  if(t.length<6||!f){$('er').textContent='የግብይት ቁጥር እና የደረሰኝ ፎቶ ያስፈልጋል።';return}
+  $('sd').disabled=true;$('sd').textContent='በመላክ ላይ...';
+  try{const blob=await shrink(f),path=code+'.jpg';
+   const u=await sb.storage.from('receipts').upload(path,blob,{contentType:'image/jpeg'});
+   if(u.error&&!/exist/i.test(u.error.message))throw u.error;
+   const r=await sb.rpc('attach_receipt',{p_code:code,p_txn:t,p_path:path});if(r.error)throw r.error;status(code,p)
+  }catch(x){$('er').textContent=/DUP/.test(x.message)?'ይህ የግብይት ቁጥር ቀደም ብሎ ጥቅም ላይ ውሏል።':'መላክ አልተቻለም፣ እንደገና ይሞክሩ።';$('sd').disabled=false;$('sd').textContent='ደረሰኝ ላክ'}}}
+const shrink=f=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,1400/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(ok,'image/jpeg',.8)};i.onerror=no;i.src=URL.createObjectURL(f)});
+async function status(code,p){
+ const d=async()=>{const{data}=await sb.rpc('get_order',{p_code:code,p_phone:p});
+  if(!data){show('<p class="err">ትዕዛዝ አልተገኘም። ቁጥሩን እና ስልኩን ያረጋግጡ።</p><button class="btn s" onclick="track()">ተመለስ</button>','track');return}
+  show(`<h1>ትዕዛዝ ${data.code}</h1><div class="box">${E(data.product)}<br>${E(data.package)} · <span class="p">${data.amount} ETB</span><div class="st">${ST[data.status]}</div></div>`+(data.status=='pending'?`<button class="btn" onclick="pay('${code}','${p}',${data.amount})">💰 ክፍያ ፈጽሜያለሁ፣ ደረሰኝ ላክ</button>`:'')+'<button class="btn s" onclick="home()">መነሻ</button>','track');
+  if(!['delivered','rejected','pending'].includes(data.status))T=setInterval(d,8000)};
+ await d()}
+function track(m=''){
+ const l=mine().map(o=>`<button class="row" onclick="status('${o.c}','${o.p}')"><span>${o.c}</span><span>›</span></button>`).join('');
+ show(`<h1>📍 ትዕዛዝ ተከታተል</h1><p class="sub">የትዕዛዝ ቁጥር እና ሲያዙ ያስገቡትን ስልክ ያስገቡ። መግባት አያስፈልግም።</p><label>የትዕዛዝ ቁጥር</label><input id="tc" autocomplete="off"><label>ስልክ ቁጥር</label><input id="tp" inputmode="tel" value="${E(localStorage.samph||'')}"><div class="err">${m}</div><button class="btn" onclick="status($('tc').value.trim(),$('tp').value.trim())">🔍 ፈልግ</button>`+(l?`<div class="sec"><h2>በዚህ ስልክ የተላኩ</h2></div><div class="rows">${l}</div>`:''),'track')}
+async function account(m=''){
+ const{data}=await sb.auth.getSession();U=data.session?.user||null;
+ if(!U)return show(`<h1>👤 Account</h1><p class="sub">አካውንት ተጫዋች እና ማናጀር አካውንቶችን ለመግዛት ያስፈልጋል።</p>${m?`<div class="hint">${m}</div>`:''}<label>ኢሜል</label><input id="ae" type="email"><label>ይለፍ ቃል (6+ ፊደል)</label><input id="ap" type="password"><div class="err" id="er"></div><button class="btn" onclick="auth(1)">ግባ</button><button class="btn s" onclick="auth(0)">አዲስ አካውንት ክፈት</button>`,'acc');
+ const{data:o}=await sb.from('orders').select('code,product,package,amount,status,phone').eq('user_id',U.id).order('id',{ascending:false});
+ show(`<h1>👤 Account</h1><div class="box">${E(U.email)}</div><div class="sec"><h2>ትዕዛዞቼ</h2></div><div class="rows">${(o||[]).map(x=>`<button class="row" onclick="status('${x.code}','${x.phone}')"><span>${E(x.package)}<br><small>${ST[x.status]}</small></span><span class="p">${x.amount}</span></button>`).join('')||'<p class="sub">ገና ትዕዛዝ የለም</p>'}</div><button class="btn s" onclick="out()">ውጣ</button>`,'acc')}
+async function auth(login){
+ const c={email:$('ae').value.trim(),password:$('ap').value},r=login?await sb.auth.signInWithPassword(c):await sb.auth.signUp(c);
+ if(r.error){$('er').textContent=login?'ኢሜል ወይም ይለፍ ቃል ትክክል አይደለም።':'አካውንት መክፈት አልተቻለም (ኢሜሉ ተይዟል ወይም ይለፍ ቃሉ አጭር ነው)።';return}
+ if(!r.data.session){$('er').textContent='ኢሜልዎን ያረጋግጡ፣ ከዚያ ይግቡ።';return}
+ account()}
+async function out(){await sb.auth.signOut();U=null;account()}
+(async()=>{if(!await load()){V.innerHTML='<p class="err">መረጃ ማምጣት አልተቻለም።</p>';return}
+ const{data}=await sb.auth.getSession();U=data.session?.user||null;home()})();
+</script></body></html>
