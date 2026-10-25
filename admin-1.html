@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="am"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin</title><link rel="stylesheet" href="style.css"><meta name="robots" content="noindex"></head><body><main id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script><script src="config.js"></script>
+<script>
+const sb=supabase.createClient(CFG.URL,CFG.KEY),A=document.getElementById('app'),$=i=>document.getElementById(i);
+const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let me,tab='awaiting_review',rows=[],promos=[],last=-1,tm;
+const TABS={awaiting_review:'🔎 ለማረጋገጥ',approved:'📦 ለማድረስ',delivered:'✅ ደርሷል',rejected:'❌ ውድቅ',codes:'🎟 Codes'};
+function login(m=''){
+ clearInterval(tm);A.innerHTML=`<h1>🔐 Admin</h1><label>Email</label><input id="em" type="email"><label>Password</label><input id="pw" type="password"><div class="err">${m}</div><button class="btn" id="lg">ግባ</button>`;
+ lg.onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:em.value.trim(),password:pw.value});error?login('ኢሜል ወይም ይለፍ ቃል ትክክል አይደለም'):start()}}
+async function start(){
+ const{data}=await sb.auth.getSession();if(!data.session)return login();
+ me=data.session.user.id;const ok=await sb.rpc('is_admin');if(!ok.data){await sb.auth.signOut();return login('ይህ መለያ አድሚን አይደለም')}await load();clearInterval(tm);tm=setInterval(load,10000)}
+function beep(){try{const c=new AudioContext(),o=c.createOscillator();o.connect(c.destination);o.frequency.value=880;o.start();o.stop(c.currentTime+.3)}catch{}}
+async function load(){
+ const{data,error}=await sb.from('orders').select('*').order('id',{ascending:false}).limit(150);
+ if(error)return login('እንደገና ይግቡ');rows=data;
+ const n=rows.filter(o=>o.status=='awaiting_review'||(o.status=='approved'&&!o.claimed_by)).length;
+ if(last>=0&&n>last)beep();last=n;document.title=n?`(${n}) Admin`:'Admin';const pr=await sb.from('promo').select('*').order('created_at',{ascending:false});promos=pr.data||[];if(tab=='codes'&&document.activeElement&&document.activeElement.tagName=='INPUT')return;draw()}
+function draw(){
+ const L=rows.filter(o=>o.status==tab);
+ const cnt=s=>s=='codes'?promos.length:rows.filter(o=>o.status==s).length;
+ A.innerHTML='<h1>📋 ትዕዛዞች</h1><div class="tabs">'+Object.entries(TABS).map(([k,v])=>`<button data-t="${k}" class="${k==tab?'on':''}">${v} (${cnt(k)})</button>`).join('')+'<button id="lo">ውጣ</button></div>'+(tab=='codes'?codesUI():L.map(card).join('')||'<p class="sub">ምንም የለም</p>');
+ A.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
+ lo.onclick=async()=>{await sb.auth.signOut();login()};
+ A.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('ይሰረዝ?')){await sb.rpc('delete_promo',{p_code:b.dataset.d});load()}});
+ A.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>act(b));
+ A.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>receipt(b))}
+function codesUI(){return `<div class="box"><label style="margin-top:0">ኮድ (ባዶ ከሆነ በራሱ ይፈጠራል)</label><input id="pc" autocomplete="off"><label>ቅናሽ (ETB)</label><input id="pd" inputmode="numeric" value="50"><label>ስንት ጊዜ ይሰራ</label><input id="pm" inputmode="numeric" value="1"><div class="err" id="pe"></div><button class="btn" onclick="mk()">➕ ኮድ ፍጠር</button></div>`+promos.map(p=>`<div class="box o"><code style="font-size:18px">${E(p.code)}</code> · −${p.discount} ETB · ${p.used}/${p.max_uses}<button class="btn s" data-d="${E(p.code)}">🗑 ሰርዝ</button></div>`).join('')}
+async function mk(){const r=await sb.rpc('create_promo',{p_code:$('pc').value,p_discount:+$('pd').value,p_max:+$('pm').value});if(r.error){$('pe').textContent='አልተሳካም (ኮዱ ተይዞ ሊሆን ይችላል)';return}load()}
+function card(o){
+ let b='';
+ if(o.status=='awaiting_review')b=`<div class="mini"><button class="btn" data-a="ok" data-id="${o.id}">✅ አጽድቅ</button><button class="btn s" data-a="no" data-id="${o.id}">❌ አትቀበል</button></div>`;
+ if(o.status=='approved')b=!o.claimed_by?`<button class="btn" data-a="claim" data-id="${o.id}">🙋 እኔ አደርሳለሁ</button>`:o.claimed_by==me?`${o.cat=='ef'?`${o.kcode?`<div class="hint">🔐 Konami code፦ <b style="font-size:20px">${E(o.kcode)}</b></div>`:o.code_req?'<p>⏳ ደንበኛው ኮዱን እየላከ ነው...</p>':''}<button class="btn s" data-a="req" data-id="${o.id}">🔐 ኮድ ጠይቅ</button>`:''}<button class="btn" data-a="done" data-id="${o.id}">✅ ደርሷል</button>`:`<p>🔒 በ ${E(o.claimed_by_name)} ተይዟል</p>`;
+ return `<div class="box o"><b>#${o.id}</b> · <code>${o.code}</code> · <small>${new Date(o.created_at).toLocaleString()}</small><br>${E(o.product)} — ${E(o.package)}<br>💰 <span class="p">${o.amount} ETB</span>${o.promo?` 🎟 ${E(o.promo)} (−${o.discount})`:''}<br>📞 ${E(o.phone)}<br>🔑 <code>${E(o.info)}</code>${o.tg?`<br>✈️ ${E(o.tg)}`:''}`+(o.receipt_path?`<br><button class="btn s" data-r="${o.receipt_path}" style="margin-top:8px">🖼 ደረሰኝ አሳይ</button><div></div>`:'')+b+'</div>'}
+async function receipt(b){
+ const{data}=await sb.storage.from('receipts').createSignedUrl(b.dataset.r,300);
+ if(data)b.nextElementSibling.innerHTML=`<img src="${data.signedUrl}">`}
+async function act(b){
+ const id=+b.dataset.id,a=b.dataset.a;
+ if(a=='no'&&!confirm('ውድቅ ይደረግ?'))return;
+ b.disabled=true;
+ const[fn,args]={ok:['review_order',{p_id:id,p_ok:true}],no:['review_order',{p_id:id,p_ok:false}],claim:['claim_order',{p_id:id}],req:['request_code',{p_id:id}],done:['deliver_order',{p_id:id}]}[a];
+ const{data,error}=await sb.rpc(fn,args);
+ if(error||!data)alert('አልተሳካም (ሌላ ሰው ቀድሞ ይዞት ሊሆን ይችላል)');
+ await load()}
+start();
+</script></body></html>
