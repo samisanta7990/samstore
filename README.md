@@ -1,1 +1,1 @@
-# samstore-miniapp
+# samstore
