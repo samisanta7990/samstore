@@ -3,8 +3,8 @@
 <script>
 const sb=supabase.createClient(CFG.URL,CFG.KEY),A=document.getElementById('app'),$=i=>document.getElementById(i);
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let me,tab='awaiting_review',rows=[],promos=[],last=-1,tm;
-const TABS={awaiting_review:'🔎 ለማረጋገጥ',approved:'📦 ለማድረስ',delivered:'✅ ደርሷል',rejected:'❌ ውድቅ',codes:'🎟 Codes'};
+let me,tab='awaiting_review',rows=[],promos=[],lists=[],last=-1,tm;
+const TABS={awaiting_review:'🔎 ለማረጋገጥ',approved:'📦 ለማድረስ',delivered:'✅ ደርሷል',rejected:'❌ ውድቅ',codes:'🎟 Codes',lst:'➕ Listings'};
 function login(m=''){
  clearInterval(tm);A.innerHTML=`<h1>🔐 Admin</h1><label>Email</label><input id="em" type="email"><label>Password</label><input id="pw" type="password"><div class="err">${m}</div><button class="btn" id="lg">ግባ</button>`;
  lg.onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:em.value.trim(),password:pw.value});error?login('ኢሜል ወይም ይለፍ ቃል ትክክል አይደለም'):start()}}
@@ -16,16 +16,24 @@ async function load(){
  const{data,error}=await sb.from('orders').select('*').order('id',{ascending:false}).limit(150);
  if(error)return login('እንደገና ይግቡ');rows=data;
  const n=rows.filter(o=>o.status=='awaiting_review'||(o.status=='approved'&&!o.claimed_by)).length;
- if(last>=0&&n>last)beep();last=n;document.title=n?`(${n}) Admin`:'Admin';const pr=await sb.from('promo').select('*').order('created_at',{ascending:false});promos=pr.data||[];if(tab=='codes'&&document.activeElement&&document.activeElement.tagName=='INPUT')return;draw()}
+ if(last>=0&&n>last)beep();last=n;document.title=n?`(${n}) Admin`:'Admin';const pr=await sb.from('promo').select('*').order('created_at',{ascending:false});promos=pr.data||[];const lr=await sb.from('catalog').select('*').in('cat',['player','manager','account']).order('id',{ascending:false});lists=lr.data||[];if((tab=='codes'||tab=='lst')&&document.activeElement&&['INPUT','SELECT'].includes(document.activeElement.tagName))return;draw()}
 function draw(){
  const L=rows.filter(o=>o.status==tab);
- const cnt=s=>s=='codes'?promos.length:rows.filter(o=>o.status==s).length;
- A.innerHTML='<h1>📋 ትዕዛዞች</h1><div class="tabs">'+Object.entries(TABS).map(([k,v])=>`<button data-t="${k}" class="${k==tab?'on':''}">${v} (${cnt(k)})</button>`).join('')+'<button id="lo">ውጣ</button></div>'+(tab=='codes'?codesUI():L.map(card).join('')||'<p class="sub">ምንም የለም</p>');
+ const cnt=s=>s=='lst'?lists.length:s=='codes'?promos.length:rows.filter(o=>o.status==s).length;
+ A.innerHTML='<h1>📋 ትዕዛዞች</h1><div class="tabs">'+Object.entries(TABS).map(([k,v])=>`<button data-t="${k}" class="${k==tab?'on':''}">${v} (${cnt(k)})</button>`).join('')+'<button id="lo">ውጣ</button></div>'+(tab=='lst'?lstUI():tab=='codes'?codesUI():L.map(card).join('')||'<p class="sub">ምንም የለም</p>');
  A.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
  lo.onclick=async()=>{await sb.auth.signOut();login()};
  A.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('ይሰረዝ?')){await sb.rpc('delete_promo',{p_code:b.dataset.d});load()}});
  A.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>act(b));
  A.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>receipt(b))}
+const shrinkR=(f,deg)=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,1200/Math.max(i.width,i.height)),w=i.width*s,h=i.height*s,r=deg%180!=0,c=document.createElement('canvas');c.width=r?h:w;c.height=r?w:h;const x=c.getContext('2d');x.translate(c.width/2,c.height/2);x.rotate(-deg*Math.PI/180);x.drawImage(i,-w/2,-h/2,w,h);c.toBlob(ok,'image/jpeg',.85)};i.onerror=no;i.src=URL.createObjectURL(f)});
+function lstUI(){return `<div class="box"><label style="margin-top:0">ዓይነት</label><select id="lc"><option value="player">Player</option><option value="manager">Manager</option><option value="account">Account (ሌላ)</option></select><label>ስም</label><input id="lt" autocomplete="off"><label>መግለጫ (ለምሳሌ GK 105)</label><input id="ll" autocomplete="off"><label>ዋጋ (ETB)</label><input id="lp" inputmode="numeric"><label>ክምችት</label><input id="ls" inputmode="numeric" value="1"><label>ፎቶ</label><input id="li" type="file" accept="image/*"><label>ፎቶ ማዞሪያ</label><select id="lr"><option value="0">አይዞር</option><option value="90">90° ወደ ግራ ↺</option><option value="270">90° ወደ ቀኝ ↻</option><option value="180">180°</option></select><div class="err" id="le"></div><button class="btn" onclick="addL()">➕ ለጥፍ</button></div>`+lists.map(l=>`<div class="box o">${l.img?`<img src="${E(l.img)}" style="max-height:150px;object-fit:contain">`:''}<b>${E(l.title)}</b> <small>${E(l.cat)} · ${E(l.label)}</small><label>ዋጋ (ETB)</label><input id="up${l.id}" inputmode="numeric" value="${l.price}"><label>ክምችት</label><input id="us${l.id}" inputmode="numeric" value="${l.stock??0}"><div class="mini"><button class="btn" onclick="updL(${l.id})">💾 አስቀምጥ</button><button class="btn s" onclick="delL(${l.id})">🗑 ሰርዝ</button></div></div>`).join('')}
+async function addL(){const f=$('li').files[0],t=$('lt').value.trim(),p=+$('lp').value;if(!t||!(p>0)){$('le').textContent='ስም እና ዋጋ ያስገቡ።';return}
+ let img=null;if(f){const path='l-'+crypto.randomUUID()+'.jpg';const u=await sb.storage.from('proofs').upload(path,await shrinkR(f,+$('lr').value),{contentType:'image/jpeg'});if(u.error){$('le').textContent='ፎቶ መስቀል አልተቻለም።';return}img=CFG.URL+'/storage/v1/object/public/proofs/'+path}
+ const r=await sb.rpc('add_listing',{p_cat:$('lc').value,p_title:t,p_label:$('ll').value,p_price:p,p_stock:+$('ls').value||0,p_img:img});
+ if(r.error){$('le').textContent='አልተሳካም (migration7 ሮጧል?)';return}load()}
+async function updL(id){const r=await sb.rpc('update_listing',{p_id:id,p_price:+$('up'+id).value,p_stock:+$('us'+id).value||0});if(r.error)alert('አልተሳካም');load()}
+async function delL(id){if(confirm('ይሰረዝ?')){await sb.rpc('delete_listing',{p_id:id});load()}}
 function codesUI(){return `<div class="box"><label style="margin-top:0">ኮድ (ባዶ ከሆነ በራሱ ይፈጠራል)</label><input id="pc" autocomplete="off"><label>ቅናሽ (ETB)</label><input id="pd" inputmode="numeric" value="50"><label>ስንት ጊዜ ይሰራ</label><input id="pm" inputmode="numeric" value="1"><div class="err" id="pe"></div><button class="btn" onclick="mk()">➕ ኮድ ፍጠር</button></div>`+promos.map(p=>`<div class="box o"><code style="font-size:18px">${E(p.code)}</code> · −${p.discount} ETB · ${p.used}/${p.max_uses}<button class="btn s" data-d="${E(p.code)}">🗑 ሰርዝ</button></div>`).join('')}
 async function mk(){const r=await sb.rpc('create_promo',{p_code:$('pc').value,p_discount:+$('pd').value,p_max:+$('pm').value});if(r.error){$('pe').textContent='አልተሳካም (ኮዱ ተይዞ ሊሆን ይችላል)';return}load()}
 const shrink=f=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>{const s=Math.min(1,1400/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);c.toBlob(ok,'image/jpeg',.8)};i.onerror=no;i.src=URL.createObjectURL(f)});

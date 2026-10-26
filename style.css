@@ -76,3 +76,25 @@ body{background:
 .heroc::before{content:"";position:absolute;right:-50px;top:-50px;width:210px;height:210px;border:3px solid #ffffff18;border-radius:50%}
 .heroc::after{content:"⚽";position:absolute;right:12px;bottom:-14px;font-size:96px;opacity:.14;transform:rotate(-12deg)}
 header b{letter-spacing:.2px}
+
+/* ===== v2 design: logo, pills, pack cards ===== */
+h1,.hero,.cn,.pr,.pt b,header b,.cpz{font-family:'Outfit','Noto Sans Ethiopic',system-ui,sans-serif}
+header{padding-top:max(12px,env(safe-area-inset-top,0px))}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t)}.brand img{width:40px;height:40px;border-radius:50%}
+header b{font-size:21px;text-transform:uppercase;letter-spacing:.5px;font-weight:800}
+.ph{display:flex;align-items:center;gap:14px;margin:6px 0 4px}.ph h1{margin:0;font-size:30px}
+.coin{width:52px;height:52px;border-radius:50%;flex:none;filter:drop-shadow(0 4px 10px #F2B70555)}.coin.sm{width:22px;height:22px;vertical-align:middle;margin-right:2px;filter:none}
+.pills{display:inline-flex;background:var(--b2);border:1px solid var(--l);border-radius:999px;padding:5px;gap:4px;margin:6px 8px 6px 0}
+.pills button{border:0;background:none;color:var(--h);padding:10px 22px;border-radius:999px;font:inherit;cursor:pointer;transition:background .2s,color .2s}
+.pills .on{background:var(--a);color:#1A1300;font-weight:700;animation:tabpop .25s ease}
+.prow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.prow .sub{margin:0}
+.srch{position:relative;margin-top:6px}.srch span{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:.7}.srch input{padding-left:46px;border-radius:16px}
+.pk{display:flex;gap:14px;align-items:flex-start;background:var(--b2);border:1px solid var(--l);border-radius:20px;padding:16px;margin-bottom:12px;animation:pop .35s ease both}
+.pb{flex:1;min-width:0}.pt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.pt b{font-size:30px;font-weight:800}.pt small{color:var(--h);letter-spacing:.06em}
+.pf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}.pr{font-size:20px;font-weight:800;color:var(--a)}
+.pf .btn,.pk .btn{width:auto;margin:0;padding:11px 30px;border-radius:999px}
+.pcc{padding:0;overflow:hidden}.pcc .pi{display:block;width:100%;aspect-ratio:1;max-height:none;object-fit:contain;border-radius:0;margin:0;background:radial-gradient(circle at 50% 40%,#1b2a4a,#080c18)}
+.pcc .ph0{display:flex;align-items:center;justify-content:center;font-size:60px}.pcb{padding:14px 16px 16px}
+.auth{text-align:center;margin:8px 0 14px}.auth .big{width:130px;height:130px;border-radius:50%;filter:drop-shadow(0 10px 24px #F2B70566)}.auth h1{font-size:30px;margin:12px 0 4px}
+.acard{padding:18px}.btn.gg{background:#fff;color:#1f1f1f;margin-top:0;border:1px solid #ddd}.btn.gg::after{display:none}
+.or{display:flex;align-items:center;gap:12px;color:var(--h);margin:16px 0 4px;font-size:13px}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--l)}
