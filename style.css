@@ -98,3 +98,23 @@ header b{font-size:21px;text-transform:uppercase;letter-spacing:.5px;font-weight
 .auth{text-align:center;margin:8px 0 14px}.auth .big{width:130px;height:130px;border-radius:50%;filter:drop-shadow(0 10px 24px #F2B70566)}.auth h1{font-size:30px;margin:12px 0 4px}
 .acard{padding:18px}.btn.gg{background:#fff;color:#1f1f1f;margin-top:0;border:1px solid #ddd}.btn.gg::after{display:none}
 .or{display:flex;align-items:center;gap:12px;color:var(--h);margin:16px 0 4px;font-size:13px}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--l)}
+
+/* ===== v3: darker look, coin-pile logo, bigger pack cards ===== */
+:root{--bg:#070a11;--b2:#0f1522;--l:#ffffff12}
+body{background:radial-gradient(900px 520px at 90% -8%,#F2B70524,transparent 62%),
+ url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Cg fill='none' stroke='%23F2B705' stroke-opacity='.06' stroke-width='3'%3E%3Ccircle cx='38' cy='38' r='17'/%3E%3Ccircle cx='38' cy='38' r='9'/%3E%3Ccircle cx='112' cy='112' r='17'/%3E%3Ccircle cx='112' cy='112' r='9'/%3E%3C/g%3E%3C/svg%3E"),var(--bg);background-attachment:fixed}
+[data-theme=light]{--bg:#f4f5fa;--b2:#fff}
+.brand img{width:54px;height:36px;border-radius:0;object-fit:contain;filter:drop-shadow(0 3px 8px #F2B70566)}
+.auth .big{width:230px;height:auto;border-radius:0;filter:drop-shadow(0 12px 28px #F2B70566)}
+header{border-bottom:1px solid var(--l);padding-bottom:12px}
+header button{border-radius:50%;width:44px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.ph .coin{width:60px;height:60px}.ph h1{font-size:38px}
+.pills{padding:6px}.pills button{padding:12px 26px}
+.pk{align-items:center;border-radius:24px;padding:18px;gap:18px}
+.pk .coin{width:84px;height:84px;filter:drop-shadow(0 6px 14px #F2B70544)}
+.pt b{font-size:34px}
+.pcc,.box,.acard,.heroc{border-radius:22px}
+.mn{display:none;position:absolute;right:14px;top:66px;background:var(--b2);border:1px solid var(--l);border-radius:18px;padding:8px;z-index:30;min-width:190px;box-shadow:0 14px 40px #000a}
+.mn.open{display:block}.mn a{display:block;padding:12px 14px;border-radius:12px;color:var(--t);cursor:pointer}.mn a:active{background:var(--l)}
+.ph h1{font-size:34px;line-height:1.1}.pt b{font-size:32px}
+.brand img{width:60px;height:38px}
