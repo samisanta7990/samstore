@@ -118,3 +118,7 @@ header button{border-radius:50%;width:44px;height:44px;padding:0;display:inline-
 .mn.open{display:block}.mn a{display:block;padding:12px 14px;border-radius:12px;color:var(--t);cursor:pointer}.mn a:active{background:var(--l)}
 .ph h1{font-size:34px;line-height:1.1}.pt b{font-size:32px}
 .brand img{width:60px;height:38px}
+header{flex-wrap:nowrap;gap:8px}header>span{display:flex;gap:6px;flex:none}
+header b{font-size:18px;white-space:nowrap}.brand{min-width:0;gap:8px}
+header button{width:40px;height:40px;margin-left:0}
+.brand img{width:56px;height:36px}
