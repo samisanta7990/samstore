@@ -10,7 +10,7 @@ function login(m=''){
  lg.onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:em.value.trim(),password:pw.value});error?login('ኢሜል ወይም ይለፍ ቃል ትክክል አይደለም'):start()}}
 async function start(){
  const{data}=await sb.auth.getSession();if(!data.session)return login();
- me=data.session.user.id;const ok=await sb.rpc('is_admin');if(!ok.data){await sb.auth.signOut();return login('ይህ መለያ አድሚን አይደለም')}await load();clearInterval(tm);tm=setInterval(load,10000)}
+ me=data.session.user.id;const ok=await sb.rpc('is_admin');if(!ok.data){await sb.auth.signOut();return login('ይህ መለያ አድሚን አይደለም')}await load();clearInterval(tm);tm=setInterval(load,6000)}
 function beep(){try{const c=new AudioContext(),o=c.createOscillator();o.connect(c.destination);o.frequency.value=880;o.start();o.stop(c.currentTime+.3)}catch{}}
 async function load(){
  const{data,error}=await sb.from('orders').select('*').order('id',{ascending:false}).limit(150);
