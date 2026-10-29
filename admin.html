@@ -3,8 +3,8 @@
 <script>
 const sb=supabase.createClient(CFG.URL,CFG.KEY),A=document.getElementById('app'),$=i=>document.getElementById(i);
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let me,tab='awaiting_review',rows=[],promos=[],lists=[],last=-1,tm;
-const TABS={awaiting_review:'🔎 ለማረጋገጥ',approved:'📦 ለማድረስ',delivered:'✅ ደርሷል',rejected:'❌ ውድቅ',codes:'🎟 Codes',lst:'➕ Listings'};
+let me,tab='awaiting_review',rows=[],promos=[],lists=[],subs=[],last=-1,tm;
+const TABS={awaiting_review:'🔎 ለማረጋገጥ',approved:'📦 ለማድረስ',delivered:'✅ ደርሷል',rejected:'❌ ውድቅ',codes:'🎟 Codes',lst:'➕ Listings',subs:'📥 Sell requests'};
 function login(m=''){
  clearInterval(tm);A.innerHTML=`<h1>🔐 Admin</h1><label>Email</label><input id="em" type="email"><label>Password</label><input id="pw" type="password"><div class="err">${m}</div><button class="btn" id="lg">ግባ</button>`;
  lg.onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:em.value.trim(),password:pw.value});error?login('ኢሜል ወይም ይለፍ ቃል ትክክል አይደለም'):start()}}
@@ -16,11 +16,11 @@ async function load(){
  const{data,error}=await sb.from('orders').select('*').order('id',{ascending:false}).limit(150);
  if(error)return login('እንደገና ይግቡ');rows=data;
  const n=rows.filter(o=>o.status=='awaiting_review'||(o.status=='approved'&&!o.claimed_by)).length;
- if(last>=0&&n>last)beep();last=n;document.title=n?`(${n}) Admin`:'Admin';const pr=await sb.from('promo').select('*').order('created_at',{ascending:false});promos=pr.data||[];const lr=await sb.from('catalog').select('*').in('cat',['player','manager','account']).order('id',{ascending:false});lists=lr.data||[];if((tab=='codes'||tab=='lst')&&document.activeElement&&['INPUT','SELECT'].includes(document.activeElement.tagName))return;draw()}
+ if(last>=0&&n>last)beep();last=n;document.title=n?`(${n}) Admin`:'Admin';const pr=await sb.from('promo').select('*').order('created_at',{ascending:false});promos=pr.data||[];const lr=await sb.from('catalog').select('*').in('cat',['player','manager','account']).order('id',{ascending:false});lists=lr.data||[];const sr=await sb.from('submissions').select('*').order('id',{ascending:false}).limit(60);subs=sr.data||[];if((tab=='codes'||tab=='lst')&&document.activeElement&&['INPUT','SELECT'].includes(document.activeElement.tagName))return;draw()}
 function draw(){
  const L=rows.filter(o=>o.status==tab);
- const cnt=s=>s=='lst'?lists.length:s=='codes'?promos.length:rows.filter(o=>o.status==s).length;
- A.innerHTML='<h1>📋 ትዕዛዞች</h1><div class="tabs">'+Object.entries(TABS).map(([k,v])=>`<button data-t="${k}" class="${k==tab?'on':''}">${v} (${cnt(k)})</button>`).join('')+'<button id="lo">ውጣ</button></div>'+(tab=='lst'?lstUI():tab=='codes'?codesUI():L.map(card).join('')||'<p class="sub">ምንም የለም</p>');
+ const cnt=s=>s=='subs'?subs.filter(x=>x.status=='pending').length:s=='lst'?lists.length:s=='codes'?promos.length:rows.filter(o=>o.status==s).length;
+ A.innerHTML='<h1>📋 ትዕዛዞች</h1><div class="tabs">'+Object.entries(TABS).map(([k,v])=>`<button data-t="${k}" class="${k==tab?'on':''}">${v} (${cnt(k)})</button>`).join('')+'<button id="lo">ውጣ</button></div>'+(tab=='subs'?subUI():tab=='lst'?lstUI():tab=='codes'?codesUI():L.map(card).join('')||'<p class="sub">ምንም የለም</p>');
  A.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
  lo.onclick=async()=>{await sb.auth.signOut();login()};
  A.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{if(confirm('ይሰረዝ?')){await sb.rpc('delete_promo',{p_code:b.dataset.d});load()}});
@@ -40,11 +40,18 @@ const shrink=f=>new Promise((ok,no)=>{const i=new Image();i.onload=()=>{const s=
 async function finish(id){const f=$('pf'+id)&&$('pf'+id).files[0];let path=null;
  if(f){path=crypto.randomUUID()+'.jpg';const u=await sb.storage.from('proofs').upload(path,await shrink(f),{contentType:'image/jpeg'});if(u.error){alert('ፎቶ መስቀል አልተቻለም፣ እንደገና ይሞክሩ');return}}
  const r=await sb.rpc('deliver_order',{p_id:id,p_proof:path});if(r.error||!r.data)alert('አልተሳካም');await load()}
+const cpb=t=>`<button class="cp" data-t="${E(t)}" onclick="cpx(this)">📋</button>`;
+function cpx(b){if(navigator.clipboard)navigator.clipboard.writeText(b.dataset.t);b.textContent='✅';setTimeout(()=>b.textContent='📋',1200)}
+function infoH(o){const i=(o.info||'').indexOf(' ');if(o.cat=='ef'&&i>0){const e=o.info.slice(0,i),p=o.info.slice(i+1);return `<br>📧 <code>${E(e)}</code> ${cpb(e)}<br>🔑 <code>${E(p)}</code> ${cpb(p)}`}return `<br>🔑 <code>${E(o.info)}</code> ${cpb(o.info)}`}
+async function ns(id){const r=await sb.rpc('notify_seller',{p_order:id});alert(r.error?'Failed (run migration8)':r.data)}
+function subUI(){return subs.map(s=>`<div class="box o"><b>#${s.id}</b> · ${E(s.status)} · ${s.price} ETB<br>${E(s.region)} · ${s.link_type=='google'?'Google linked':'Konami only'} · OVR ${s.overall||'-'}<br>✈️ ${E(s.tg)}${s.descr?`<br>${E(s.descr)}`:''}<div class="thumbs">${(s.images||[]).map(u=>`<a href="${E(u)}" target="_blank"><img src="${E(u)}"></a>`).join('')}</div>${s.status=='pending'?`<div class="mini"><button class="btn" onclick="apS(${s.id},${s.price})">✅ List it</button><button class="btn s" onclick="rjS(${s.id})">❌ Reject</button></div>`:''}</div>`).join('')||'<p class="sub">Nothing here</p>'}
+async function apS(id,p){const v=prompt('Listing price (ETB)',p);if(!v)return;const r=await sb.rpc('approve_submission',{p_id:id,p_price:+v});if(r.error)alert('Failed');load()}
+async function rjS(id){if(confirm('Reject this request?')){await sb.rpc('reject_submission',{p_id:id});load()}}
 function card(o){
  let b='';
  if(o.status=='awaiting_review')b=`<div class="mini"><button class="btn" data-a="ok" data-id="${o.id}">✅ አጽድቅ</button><button class="btn s" data-a="no" data-id="${o.id}">❌ አትቀበል</button></div>`;
- if(o.status=='approved')b=!o.claimed_by?`<button class="btn" data-a="claim" data-id="${o.id}">🙋 እኔ አደርሳለሁ</button>`:o.claimed_by==me?`${o.cat=='ef'?`${o.kcode?`<div class="hint">🔐 Konami code፦ <b style="font-size:20px">${E(o.kcode)}</b></div>`:o.code_req?'<p>⏳ ደንበኛው ኮዱን እየላከ ነው...</p>':''}<button class="btn s" data-a="req" data-id="${o.id}">🔐 ኮድ ጠይቅ</button>`:''}<label>📸 የማድረስ ማረጋገጫ ፎቶ (አማራጭ፣ ደንበኛው ያየዋል)</label><input type="file" accept="image/*" id="pf${o.id}"><button class="btn" onclick="finish(${o.id})">✅ ደርሷል</button>`:`<p>🔒 በ ${E(o.claimed_by_name)} ተይዟል</p>`;
- return `<div class="box o"><b>#${o.id}</b> · <code>${o.code}</code> · <small>${new Date(o.created_at).toLocaleString()}</small><br>${E(o.product)} — ${E(o.package)}<br>💰 <span class="p">${o.amount} ETB</span>${o.promo?` 🎟 ${E(o.promo)} (−${o.discount})`:''}<br>📞 ${E(o.phone)}<br>🔑 <code>${E(o.info)}</code>${o.tg?`<br>✈️ ${E(o.tg)}`:''}${o.proof?`<br><img src="${CFG.URL}/storage/v1/object/public/proofs/${o.proof}">`:''}`+(o.receipt_path?`<br><button class="btn s" data-r="${o.receipt_path}" style="margin-top:8px">🖼 ደረሰኝ አሳይ</button><div></div>`:'')+b+'</div>'}
+ if(o.status=='approved')b=!o.claimed_by?`<button class="btn" data-a="claim" data-id="${o.id}">🙋 እኔ አደርሳለሁ</button>`:o.claimed_by==me?`${o.cat=='ef'?`${o.kcode?`<div class="hint">🔐 Konami code፦ <b style="font-size:20px">${E(o.kcode)}</b> ${cpb(o.kcode)}</div>`:o.code_req?'<p>⏳ ደንበኛው ኮዱን እየላከ ነው...</p>':''}<button class="btn s" data-a="req" data-id="${o.id}">🔐 ኮድ ጠይቅ</button>`:''}<label>📸 የማድረስ ማረጋገጫ ፎቶ (አማራጭ፣ ደንበኛው ያየዋል)</label><input type="file" accept="image/*" id="pf${o.id}"><button class="btn" onclick="finish(${o.id})">✅ ደርሷል</button>`:`<p>🔒 በ ${E(o.claimed_by_name)} ተይዟል</p>`;
+ return `<div class="box o"><b>#${o.id}</b> · <code>${o.code}</code> · <small>${new Date(o.created_at).toLocaleString()}</small><br>${E(o.product)} — ${E(o.package)}<br>💰 <span class="p">${o.amount} ETB</span>${o.promo?` 🎟 ${E(o.promo)} (−${o.discount})`:''}<br>📞 ${E(o.phone)}${infoH(o)}${o.tg?`<br>✈️ ${E(o.tg)}`:''}${(()=>{const l=lists.find(x=>x.id==o.catalog_id);return l&&l.seller_tg?`<br>🧑‍💼 Seller ${E(l.seller_tg)} <button class="cp" onclick="ns(${o.id})">📣 Notify seller</button>`:''})()}${o.proof?`<br><img src="${CFG.URL}/storage/v1/object/public/proofs/${o.proof}">`:''}`+(o.receipt_path?`<br><button class="btn s" data-r="${o.receipt_path}" style="margin-top:8px">🖼 ደረሰኝ አሳይ</button><div></div>`:'')+b+'</div>'}
 async function receipt(b){
  const{data}=await sb.storage.from('receipts').createSignedUrl(b.dataset.r,300);
  if(data)b.nextElementSibling.innerHTML=`<img src="${data.signedUrl}">`}

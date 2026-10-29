@@ -128,3 +128,15 @@ header button{width:40px;height:40px;margin-left:0}
 nav button{line-height:1.1}.ctr .ni{width:28px;height:28px}
 .mi{width:20px;height:20px;vertical-align:-5px;margin-right:12px;object-fit:contain}
 .pk .coin.pc3d{width:104px;height:84px;border-radius:0;object-fit:contain;filter:drop-shadow(0 8px 14px #F2B70533)}
+
+/* ===== v5: gold background like the coin card, seller listings ===== */
+body{background:
+ linear-gradient(180deg,#0000 0,#0000 90px,var(--bg) 620px) no-repeat,
+ url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='300' viewBox='0 0 420 300'%3E%3Cg fill='%23000' fill-opacity='.07' stroke='%23fff' stroke-opacity='.16' stroke-width='5'%3E%3Ccircle cx='70' cy='40' r='88'/%3E%3Ccircle cx='350' cy='120' r='88'/%3E%3Ccircle cx='150' cy='250' r='88'/%3E%3C/g%3E%3C/svg%3E") 0 0/420px 300px repeat-x,
+ linear-gradient(180deg,#a97c12,#8a640d 260px,var(--bg) 620px) no-repeat,var(--bg);background-attachment:scroll}
+[data-theme=light] body{background:linear-gradient(180deg,#e9bf4a,#f4e3a8 260px,var(--bg) 620px) no-repeat,var(--bg)}
+header{border-bottom-color:#ffffff22}
+.bd{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.bd span{background:#F2B7051f;border:1px solid #F2B70544;color:var(--a);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600}
+.thumbs{display:flex;gap:8px;overflow-x:auto;margin:8px 0}.thumbs img{width:76px;height:76px;object-fit:cover;border-radius:10px;border:1px solid var(--l)}
+select{width:100%;background:var(--b2);border:1px solid var(--l);color:var(--t);border-radius:12px;padding:13px;font:inherit}
+.sellcta{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600}
