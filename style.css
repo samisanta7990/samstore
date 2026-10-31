@@ -140,3 +140,5 @@ header{border-bottom-color:#ffffff22}
 .thumbs{display:flex;gap:8px;overflow-x:auto;margin:8px 0}.thumbs img{width:76px;height:76px;object-fit:cover;border-radius:10px;border:1px solid var(--l)}
 select{width:100%;background:var(--b2);border:1px solid var(--l);color:var(--t);border-radius:12px;padding:13px;font:inherit}
 .sellcta{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600}
+
+.lk{display:block;text-align:right;color:var(--a);margin:8px 2px 0;cursor:pointer;font-size:14px}

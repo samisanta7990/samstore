@@ -5,5 +5,6 @@ TG:'Samstoreet',
 CHANNEL:'Samstore9',
 TIKTOK:'Samstore9',
 GROUP:'https://t.me/Efootballarenaeth',
-PHONE:''
+PHONE:'',
+GOOGLE:true
 };
