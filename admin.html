@@ -45,7 +45,7 @@ function cpx(b){if(navigator.clipboard)navigator.clipboard.writeText(b.dataset.t
 function infoH(o){const i=(o.info||'').indexOf(' ');if(o.cat=='ef'&&i>0){const e=o.info.slice(0,i),p=o.info.slice(i+1);return `<br>📧 <code>${E(e)}</code> ${cpb(e)}<br>🔑 <code>${E(p)}</code> ${cpb(p)}`}return `<br>🔑 <code>${E(o.info)}</code> ${cpb(o.info)}`}
 async function ns(id){const r=await sb.rpc('notify_seller',{p_order:id});alert(r.error?'Failed (run migration8)':r.data)}
 function subUI(){return subs.map(s=>`<div class="box o"><b>#${s.id}</b> · ${E(s.status)} · ${s.price} ETB<br>${E(s.region)} · ${s.link_type=='google'?'Google linked':'Konami only'} · OVR ${s.overall||'-'}<br>✈️ ${E(s.tg)}${s.descr?`<br>${E(s.descr)}`:''}<div class="thumbs">${(s.images||[]).map(u=>`<a href="${E(u)}" target="_blank"><img src="${E(u)}"></a>`).join('')}</div>${s.status=='pending'?`<div class="mini"><button class="btn" onclick="apS(${s.id},${s.price})">✅ List it</button><button class="btn s" onclick="rjS(${s.id})">❌ Reject</button></div>`:''}</div>`).join('')||'<p class="sub">Nothing here</p>'}
-async function apS(id,p){const v=prompt('Listing price (ETB)',p);if(!v)return;const r=await sb.rpc('approve_submission',{p_id:id,p_price:+v});if(r.error)alert('Failed');load()}
+async function apS(id,p){const FEE=100,v=(+p)+FEE;if(!confirm('Seller price: '+p+' ETB\nBuyer price: '+v+' ETB (seller price + '+FEE+' fee)\n\nList it?'))return;const r=await sb.rpc('approve_submission',{p_id:id,p_price:+v});if(r.error)alert('Failed');load()}
 async function rjS(id){if(confirm('Reject this request?')){await sb.rpc('reject_submission',{p_id:id});load()}}
 function card(o){
  let b='';
