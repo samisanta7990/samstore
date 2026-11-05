@@ -114,11 +114,11 @@ async function sendSell(){
  if(!em||!pw){$('er').textContent='Enter the account email and password.';return}
  $('ssb').disabled=true;$('ssb').textContent='Uploading...';
  try{const urls=[];for(const f of fs){const path=U.id+'/'+crypto.randomUUID()+'.jpg';const u=await sb.storage.from('subs').upload(path,await shrink(f),{contentType:'image/jpeg'});if(u.error)throw u.error;urls.push(CFG.URL+'/storage/v1/object/public/subs/'+path)}
-  const r=await sb.rpc('submit_account',{p_price:p,p_link:$('sl').value,p_region:$('sr').value,p_overall:o,p_descr:$('sd').value.trim()||null,p_images:urls});
-  if(r.error)throw r.error;
-  const cr=await sb.rpc('save_seller_creds',{p_email:em,p_pass:pw});if(cr.error)throw cr.error;
+  if(!window.SUBOK){const r=await sb.rpc('submit_account',{p_price:p,p_link:$('sl').value,p_region:$('sr').value,p_overall:o,p_descr:$('sd').value.trim()||null,p_images:urls});
+  if(r.error)throw r.error;window.SUBOK=1}
+  const cr=await sb.rpc('save_seller_creds',{p_email:em,p_pass:pw});if(cr.error)throw cr.error;window.SUBOK=0;
   show('<h1>Submitted!</h1><p class="sub">We will review your account and contact you on Telegram.</p><button class="btn" onclick="home()">Back to home</button>','players')
- }catch(e){$('er').textContent=/NOTG/.test(e.message||'')?'Connect your Telegram first.':'Could not submit, please try again.';$('ssb').disabled=false;$('ssb').textContent='Submit for review'}}
+ }catch(e){const m=String((e&&e.message)||e||'');$('er').textContent=/NOTG/.test(m)?'Connect your Telegram first.':/LIMIT/.test(m)?'You already have 5 pending requests.':/save_seller_creds|schema cache/i.test(m)?'Setup incomplete: the owner must run migration10 in Supabase.':'Could not submit: '+m.slice(0,100);$('ssb').disabled=false;$('ssb').textContent='Submit for review'}}
 function cpy(t,b){const d=()=>{b.textContent='✅ Copied';setTimeout(()=>b.textContent='📋 Copy',1500)};navigator.clipboard?navigator.clipboard.writeText(t).then(d,()=>0):0}
 function support(){const t=(CFG.TG||'').replace('@',''),c=(CFG.CHANNEL||'').replace('@',''),k=(CFG.TIKTOK||'').replace('@',''),g=CFG.GROUP||'',p=CFG.PHONE||'';
  const b=(h,l,pri)=>`<a class="btn${pri?'':' s'}" style="display:block;text-align:center;text-decoration:none" href="${E(h)}" target="_blank" rel="noopener">${l}</a>`;
