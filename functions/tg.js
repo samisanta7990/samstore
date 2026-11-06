@@ -17,9 +17,51 @@ export async function onRequestPost({ request, env }) {
     await api('sendMessage', { chat_id: chat, text: 'Welcome to Sam Store! Send your message here and we will reply soon.' });
     return new Response('ok');
   }
-  // If the customer replies with a short code while we are waiting for one, save it on their order.
+  // Seller replies: (1) a price -> send final price (+100) to the buyer, (2) a code -> save it for the admin.
+  let handled = false;
   const t = (m.text || '').trim();
-  if (/^[A-Za-z0-9]{4,10}$/.test(t) && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+  if (m.text && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+    try {
+      const SB = env.SUPABASE_URL, K = env.SUPABASE_SERVICE_KEY;
+      const H = { apikey: K, Authorization: 'Bearer ' + K, 'content-type': 'application/json' };
+      const get = async (u) => await (await fetch(`${SB}/rest/v1/${u}`, { headers: H })).json();
+      const patch = (u, b) => fetch(`${SB}/rest/v1/${u}`, { method: 'PATCH', headers: H, body: JSON.stringify(b) });
+      const lk = await get(`tg_links?tg_id=eq.${m.from.id}&select=user_id`);
+      if (lk && lk[0]) {
+        const cats = await get(`catalog?seller_id=eq.${lk[0].user_id}&cat=eq.account&stock=gt.0&select=id,sub_id,label`);
+        if (Array.isArray(cats) && cats.length) {
+          const ids = cats.map(c => c.id).join(',');
+          const pm = t.replace(/,/g, '').match(/^(\d{3,6})\s*(birr|etb|br)?$/i);
+          if (pm) {
+            const pr = await get(`price_requests?catalog_id=in.(${ids})&answered=eq.false&order=id.desc&limit=1&select=catalog_id`);
+            if (Array.isArray(pr) && pr[0]) {
+              const cid = pr[0].catalog_id, final = Number(pm[1]) + 100, c = cats.find(x => x.id == cid);
+              const reqs = await get(`price_requests?catalog_id=eq.${cid}&answered=eq.false&select=user_id`);
+              for (const r of reqs) {
+                const b = await get(`tg_links?user_id=eq.${r.user_id}&select=tg_id`);
+                if (b && b[0]) await api('sendMessage', { chat_id: b[0].tg_id, text: `\u{1F4AC} Final price for the account (${c.label}): ${final} ETB.\nTo buy, open https://samstore.pages.dev and tap Buy.` });
+              }
+              await patch(`price_requests?catalog_id=eq.${cid}&answered=eq.false`, { answered: true });
+              await patch(`catalog?id=eq.${cid}`, { price: final });
+              await api('sendMessage', { chat_id: chat, text: `\u2705 Price sent to the buyer. Your price: ${pm[1]} ETB.` });
+              handled = true;
+            }
+          }
+          const subs = cats.map(c => c.sub_id).filter(Boolean).join(',');
+          if (!handled && subs && /^[A-Za-z0-9]{4,10}$/.test(t)) {
+            const sec = await get(`account_secrets?sub_id=in.(${subs})&ask_stage=not.is.null&order=ask_at.desc&limit=1&select=sub_id,ask_stage`);
+            if (Array.isArray(sec) && sec[0]) {
+              await patch(`account_secrets?sub_id=eq.${sec[0].sub_id}`, sec[0].ask_stage === 2 ? { code2: t } : { code1: t });
+              await api('sendMessage', { chat_id: chat, text: '\u2705 Code received. Thank you!' });
+              handled = true;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+  }
+  // If the customer replies with a short code while we are waiting for one, save it on their order.
+  if (!handled && /^[A-Za-z0-9]{4,10}$/.test(t) && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
     try {
       const SB = env.SUPABASE_URL, K = env.SUPABASE_SERVICE_KEY;
       const H = { apikey: K, Authorization: 'Bearer ' + K, 'content-type': 'application/json' };
