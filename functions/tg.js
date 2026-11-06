@@ -28,7 +28,7 @@ export async function onRequestPost({ request, env }) {
       const patch = (u, b) => fetch(`${SB}/rest/v1/${u}`, { method: 'PATCH', headers: H, body: JSON.stringify(b) });
       const lk = await get(`tg_links?tg_id=eq.${m.from.id}&select=user_id`);
       if (lk && lk[0]) {
-        const cats = await get(`catalog?seller_id=eq.${lk[0].user_id}&cat=eq.account&stock=gt.0&select=id,sub_id,label`);
+        const cats = await get(`catalog?seller_id=eq.${lk[0].user_id}&cat=eq.account&select=id,label`);
         if (Array.isArray(cats) && cats.length) {
           const ids = cats.map(c => c.id).join(',');
           const pm = t.replace(/,/g, '').match(/^(\d{3,6})\s*(birr|etb|br)?$/i);
@@ -47,11 +47,10 @@ export async function onRequestPost({ request, env }) {
               handled = true;
             }
           }
-          const subs = cats.map(c => c.sub_id).filter(Boolean).join(',');
-          if (!handled && subs && /^[A-Za-z0-9]{4,10}$/.test(t)) {
-            const sec = await get(`account_secrets?sub_id=in.(${subs})&ask_stage=not.is.null&order=ask_at.desc&limit=1&select=sub_id,ask_stage`);
-            if (Array.isArray(sec) && sec[0]) {
-              await patch(`account_secrets?sub_id=eq.${sec[0].sub_id}`, sec[0].ask_stage === 2 ? { code2: t } : { code1: t });
+          if (!handled && /^(?=.*\d)[A-Za-z0-9]{4,10}$/.test(t)) {
+            const ask = await get(`seller_asks?catalog_id=in.(${ids})&code=is.null&order=id.desc&limit=1&select=id`);
+            if (Array.isArray(ask) && ask[0]) {
+              await patch(`seller_asks?id=eq.${ask[0].id}`, { code: t, got_at: new Date().toISOString() });
               await api('sendMessage', { chat_id: chat, text: '\u2705 Code received. Thank you!' });
               handled = true;
             }
@@ -61,7 +60,7 @@ export async function onRequestPost({ request, env }) {
     } catch (e) {}
   }
   // If the customer replies with a short code while we are waiting for one, save it on their order.
-  if (!handled && /^[A-Za-z0-9]{4,10}$/.test(t) && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+  if (!handled && /^(?=.*\d)[A-Za-z0-9]{4,10}$/.test(t) && env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
     try {
       const SB = env.SUPABASE_URL, K = env.SUPABASE_SERVICE_KEY;
       const H = { apikey: K, Authorization: 'Bearer ' + K, 'content-type': 'application/json' };
