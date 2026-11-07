@@ -331,7 +331,7 @@ function pay(code,p,price){
   try{const blob=await shrink(f),path=code+'.jpg',h=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()))].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,24);
    const u=await sb.storage.from('receipts').upload(path,blob,{contentType:'image/jpeg'});
    if(u.error&&!/exist/i.test(u.error.message))throw u.error;
-   const r=await sb.rpc('attach_receipt',{p_code:code,p_txn:h,p_path:path});if(r.error)throw r.error;if(tv){const q=await sb.rpc('set_tx_ref',{p_code:code,p_ref:tv});if(q.error&&/DUP/.test(q.error.message))throw new Error('DUP')}status(code,p)
+   const r=await sb.rpc('attach_receipt',{p_code:code,p_txn:h,p_path:path});if(r.error)throw r.error;if(tv){const q=await sb.rpc('set_tx_ref',{p_code:code,p_ref:tv});if(q.error&&/DUP/.test(q.error.message))throw new Error('DUP');try{const ac=new AbortController();setTimeout(()=>ac.abort(),10000);await fetch('/autoverify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code}),signal:ac.signal})}catch(e){}}status(code,p)
   }catch(x){$('er').textContent=/DUP/.test(x.message)?'ይህ ደረሰኝ ቀደም ብሎ ጥቅም ላይ ውሏል።':'መላክ አልተቻለም፣ እንደገና ይሞክሩ።';$('sd').disabled=false;$('sd').textContent='ደረሰኝ ላክ'}}}
 const loadHeic=()=>window.heic2any?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js';s.onload=ok;s.onerror=()=>no(new Error('IMG'));document.head.appendChild(s)});
 const shrink=async f=>{
