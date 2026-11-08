@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.samstore.app",
+    "sha256_cert_fingerprints": ["E7:F4:5D:D7:08:90:0A:51:CD:3F:FB:96:D3:83:EF:26:54:13:DE:99:B0:51:0B:A5:D8:0F:F8:98:59:B7:F3:4D"]
+  }
+}]
