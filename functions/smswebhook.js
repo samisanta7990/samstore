@@ -39,6 +39,11 @@ export async function onRequest({ request, env }) {
     const text = pick('text', 'message', 'body', 'content', 'sms', 'msg').slice(0, 1000);
     const from = pick('from', 'sender', 'number', 'phone', 'address').slice(0, 60);
     if (!text) return json({ ignored: 'empty' });
+    // heartbeat: proves the phone is forwarding SMS right now (used to decide when a missing payment means "fake")
+    try {
+      const K0 = env.SUPABASE_SERVICE_KEY;
+      await fetch(`${env.SUPABASE_URL}/rest/v1/sms_heartbeat?on_conflict=id`, { method: 'POST', headers: { apikey: K0, Authorization: 'Bearer ' + K0, 'content-type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ id: 1, last_at: new Date().toISOString() }) });
+    } catch (e) {}
 
     // Only incoming-money messages (English: "received", Amharic: "ተቀብለዋል")
     if (!/received|ተቀብ|ደርሶ/i.test(text)) return json({ ignored: 'not a received-money message' });
