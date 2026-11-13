@@ -155,3 +155,52 @@ header{border-bottom-color:var(--l)}
 .btn.gg{background:var(--b2);color:var(--t);border:1px solid var(--l)}
 .gi{display:inline-flex;width:34px;height:34px;border-radius:10px;background:#fff;align-items:center;justify-content:center;margin-right:10px;vertical-align:middle;box-shadow:0 2px 6px #0004}
 .tgw{display:flex;justify-content:center;min-height:44px;margin-top:6px}
+
+/* ===== LIQUID GLASS (nav + buttons) ===== */
+:root{--glass:rgba(255,255,255,.07);--glass-b:rgba(255,255,255,.20);--glass-hi:rgba(255,255,255,.38);--glass-sh:rgba(0,0,0,.45);--spring:cubic-bezier(.34,1.56,.64,1)}
+[data-theme=light]{--glass:rgba(255,255,255,.55);--glass-b:rgba(255,255,255,.85);--glass-hi:rgba(255,255,255,.95);--glass-sh:rgba(40,50,90,.20)}
+
+/* floating glass bar */
+main{padding-bottom:118px}
+nav{left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));border:1px solid var(--glass-b);border-radius:32px;padding:4px 4px 0;
+ background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),var(--glass);
+ -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
+ box-shadow:inset 0 1px 0 var(--glass-hi),inset 0 -1px 0 rgba(255,255,255,.06),0 16px 40px var(--glass-sh)}
+nav button{border-radius:24px;margin:2px 1px 4px;padding:8px 2px;position:relative;transition:transform .4s var(--spring),background .3s ease,color .25s ease}
+nav button.on:not(.ctr){color:var(--a);
+ background:radial-gradient(120% 90% at 50% 0%,rgba(255,255,255,.28),rgba(255,255,255,0) 60%),linear-gradient(180deg,rgba(242,183,5,.30),rgba(242,183,5,.10));
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -6px 12px rgba(242,183,5,.12),0 4px 14px rgba(242,183,5,.20);
+ animation:liquidIn .55s var(--spring)}
+@keyframes liquidIn{0%{transform:scale(.82,1.18)}45%{transform:scale(1.1,.92)}100%{transform:scale(1)}}
+
+/* Home: glass sphere */
+nav .ctr{background:radial-gradient(circle at 30% 22%,rgba(255,255,255,.55),rgba(255,255,255,0) 42%),linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.04)),var(--glass);
+ border:1px solid var(--glass-b);box-shadow:inset 0 2px 0 var(--glass-hi),inset 0 -8px 16px rgba(0,0,0,.18),0 10px 26px var(--glass-sh)}
+nav .ctr.on{background:radial-gradient(circle at 30% 22%,rgba(255,255,255,.75),rgba(255,255,255,0) 45%),linear-gradient(160deg,#FFD24A,#F2B705 55%,#C99200);
+ border-color:rgba(255,255,255,.55);color:#1A1300;box-shadow:inset 0 2px 0 rgba(255,255,255,.8),inset 0 -8px 16px rgba(150,95,0,.35),0 10px 28px rgba(242,183,5,.45)}
+
+/* primary buttons: glossy gel */
+.btn:not(.s):not(.gg){background:linear-gradient(180deg,#FFD24A 0%,#F2B705 55%,#D99C00 100%);
+ box-shadow:inset 0 1.5px 0 rgba(255,255,255,.75),inset 0 -3px 8px rgba(160,100,0,.35),0 8px 22px rgba(242,183,5,.35)}
+.btn:not(.s):not(.gg)::before,.cb::before{content:"";position:absolute;top:0;left:6%;right:6%;height:48%;border-radius:inherit;
+ background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0));pointer-events:none}
+.cb{position:relative;overflow:hidden;background:linear-gradient(180deg,#FFD24A,#F2B705 55%,#D99C00);
+ box-shadow:inset 0 1.5px 0 rgba(255,255,255,.75),inset 0 -3px 6px rgba(160,100,0,.3),0 6px 16px rgba(242,183,5,.3)}
+
+/* secondary buttons + chips: clear glass */
+.btn.s,.btn.gg,.cp,header button,.tabs button,.pills,.mn{
+ background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.03)),var(--glass);
+ border:1px solid var(--glass-b);
+ -webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);
+ box-shadow:inset 0 1px 0 var(--glass-hi),0 6px 18px var(--glass-sh)}
+.pills button{background:none}
+.tabs .on,.pills .on{background:linear-gradient(180deg,#FFD24A,#F2B705 60%,#D99C00);color:#1A1300;
+ box-shadow:inset 0 1.5px 0 rgba(255,255,255,.7),inset 0 -3px 6px rgba(160,100,0,.3),0 4px 12px rgba(242,183,5,.3)}
+
+/* liquid press */
+.btn,.cb,.cp,header button,.tabs button,.pills button{transition:transform .35s var(--spring),box-shadow .25s ease,filter .2s ease,background .25s ease}
+.btn:active,.cb:active,.cp:active,header button:active,.tabs button:active,.pills button:active{transform:scale(.93,.9)}
+nav button:active:not(.ctr){transform:scale(.9,.86)}
+nav .ctr:active{transform:scale(.9)}
+
+@media (prefers-reduced-motion:reduce){nav button.on:not(.ctr){animation:none}.btn,.cb,nav button{transition:none}}
