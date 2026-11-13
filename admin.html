@@ -22,7 +22,7 @@ window.BCT=window.BCT||'🔥 Discount eFootball Coins are here!\n500 Coins - 600
 function bcUI(){return `<div class="box"><p class="sub">ይህ መልዕክት ለሁሉም አባላት (በአፑ Messages እና በቴሌግራም) ይላካል፤ ማሳወቂያ የፈቀዱ ደግሞ push ያገኛሉ።</p><textarea id="bct" rows="12" style="width:100%;background:var(--b2);color:var(--t);border:1px solid var(--l);border-radius:12px;padding:12px;font:inherit" oninput="window.BCT=this.value">${E(window.BCT)}</textarea><button class="btn" id="bcs" onclick="sendBC()">📣 Send to all members</button></div>`}
 async function sendBC(){const t=($('bct').value||'').trim();if(!t)return;if(!confirm('Send this message to ALL members?'))return;const b=$('bcs');b.disabled=true;b.textContent='...';
  const r=await sb.rpc('broadcast_msg',{p_text:t});if(r.error){alert('Failed: '+r.error.message);b.disabled=false;b.textContent='📣 Send to all members';return}
- let extra='';try{const ss=(await sb.auth.getSession()).data.session;const x=await fetch('/notifyall',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+ss.access_token},body:JSON.stringify({text:t})});extra=JSON.stringify(await x.json())}catch(e){extra='push error'}
+ let extra='';try{const ss=(await sb.auth.getSession()).data.session;const x=await fetch('/notifyall',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+ss.access_token},body:JSON.stringify({text:t})});extra='push/telegram: '+x.status+' '+(await x.text()).slice(0,120)}catch(e){extra='push error: '+e}
  alert('In-app messages sent: '+r.data+'\n'+extra);b.disabled=false;b.textContent='📣 Send to all members'}
 function draw(){
  const L=rows.filter(o=>o.status==tab);
