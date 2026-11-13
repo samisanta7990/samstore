@@ -79,6 +79,7 @@ async function act(b){
  const[fn,args]={ok:['review_order',{p_id:id,p_ok:true}],no:['review_order',{p_id:id,p_ok:false}],claim:['claim_order',{p_id:id}],req:['request_code',{p_id:id}],done:['deliver_order',{p_id:id}]}[a];
  const{data,error}=await sb.rpc(fn,args);
  if(error||!data)alert('አልተሳካም (ሌላ ሰው ቀድሞ ይዞት ሊሆን ይችላል)');
+ if(a=='req'&&!error&&data){try{const od=await sb.from('orders').select('user_id').eq('id',id).maybeSingle();const buid=od.data&&od.data.user_id;if(buid){const mm=await sb.rpc('admin_msg_user',{p_user:buid,p_text:'Konami sent a verification code to your email. Please open your order (Profile > My orders) and enter the code.',p_kind:'text',p_meta:{order:id}});if(!mm.error)pingPush(mm.data)}}catch(e){}}
  await load()}
 start();
 </script><a href="adminmsg.html" style="position:fixed;right:14px;bottom:84px;z-index:50;background:#F2B705;color:#000;text-decoration:none;font-weight:700;padding:12px 16px;border-radius:99px;box-shadow:0 8px 24px #000a">💬 Messages</a></body></html>
