@@ -28,7 +28,7 @@ export async function onRequestPost({ request, env }) {
     if (!m || m.sender_id !== uid) return json({ error: 'msg' }, 403);
     const cs = await (await fetch(`${SB}/rest/v1/conversations?id=eq.${m.conv_id}&select=kind,buyer_id,seller_id`, { headers: H })).json();
     const c = cs && cs[0];
-    if (!c) return json({ sent: 0 });
+    if (!c) return json({ sent: 0, why: 'no-conv' });
 
     let to = [];
     if (c.kind === 'support') {
@@ -43,18 +43,20 @@ export async function onRequestPost({ request, env }) {
       }
     }
     to = to.filter((x) => x && x !== uid);
-    if (!to.length) return json({ sent: 0 });
+    if (!to.length) return json({ sent: 0, why: 'no-recipient', kind: c.kind, role: m.role });
 
     const subs = await (await fetch(`${SB}/rest/v1/push_subs?user_id=in.(${to.join(',')})&select=id,endpoint`, { headers: H })).json();
     let sent = 0;
+    const st = [];
     for (const s of Array.isArray(subs) ? subs : []) {
       try {
         const r = await fetch(s.endpoint, { method: 'POST', headers: { TTL: '86400', Urgency: 'high', Authorization: await vapidAuth(env, s.endpoint), 'Content-Length': '0' } });
+        st.push(r.status);
         if (r.status === 404 || r.status === 410) await fetch(`${SB}/rest/v1/push_subs?id=eq.${s.id}`, { method: 'DELETE', headers: H });
         else if (r.ok) sent++;
-      } catch (e) {}
+      } catch (e) { st.push('err'); }
     }
-    return json({ sent });
+    return json({ sent, to: to.length, subs: Array.isArray(subs) ? subs.length : String(JSON.stringify(subs)).slice(0, 80), st });
   } catch (e) {
     return json({ error: 'server' }, 500);
   }
