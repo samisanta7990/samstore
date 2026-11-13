@@ -11,7 +11,7 @@ self.addEventListener('fetch', (e) => {
 // Push notifications (empty push -> generic message)
 self.addEventListener('push', (e) => {
   e.waitUntil(self.registration.showNotification('SAM STORE', {
-    body: '\u{1F4AC} You have a new message', icon: '/icon-192.png', badge: '/icon-192.png',
+    body: '\u{1F4AC} You have a new message', icon: '/icon-192.png', badge: '/badge-96.png',
     tag: 'sam-msg', renotify: true, data: { url: '/?msgs=1' } }));
 });
 self.addEventListener('notificationclick', (e) => {
