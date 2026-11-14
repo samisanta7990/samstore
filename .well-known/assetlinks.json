@@ -1,1 +1,2 @@
+
 [{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"com.samstore.app","sha256_cert_fingerprints":["E7:F4:5D:D7:08:90:0A:51:CD:3F:FB:96:D3:83:EF:26:54:13:DE:99:B0:51:0B:A5:D8:0F:F8:98:59:B7:F3:4D"]}},{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"dev.pages.samstore.twa","sha256_cert_fingerprints":["E3:53:64:ED:BC:A0:49:60:5A:B3:56:F4:A9:F1:04:B5:43:4B:6D:55:48:CC:16:7B:6E:98:95:E7:D2:83:AB:F9"]}}]
