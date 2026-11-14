@@ -411,7 +411,37 @@ const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;
 const mine=()=>JSON.parse(localStorage.sam2||'[]');
 const save=(c,p)=>localStorage.sam2=JSON.stringify([{c,p},...mine().filter(o=>o.c!=c)]);
 const bk=f=>`<button class="back" onclick="${f}()">← ተመለስ</button>`;
-function show(h,t){window.OK=1;clearInterval(T);V.innerHTML=h;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));scrollTo(0,0);reveal()}
+function FT(){return `<div class="ft"><a onclick="info('how')">${L2('How it works','እንዴት እንደምንሰራ')}</a><a onclick="info('terms')">${L2('Terms','ደንቦች')}</a><a onclick="info('security')">${L2('Security','ደህንነት')}</a><a onclick="info('support')">${L2('Support','እርዳታ')}</a><small>© SAM STORE</small></div>`}
+function info(k){
+ const P={
+ how:[L2('How SAM STORE works','SAM STORE እንዴት እንደሚሰራ'),[
+  [L2('1. Choose','1. ይምረጡ'),L2('Pick a coin pack, game top-up or account and place your order.','የኮይን ጥቅል፣ የጨዋታ ቶፕ-አፕ ወይም አካውንት መርጠው ትዕዛዝ ይላኩ።')],
+  [L2('2. Pay with Telebirr','2. በTelebirr ይክፈሉ'),L2('Send the exact amount to the Telebirr account shown on your order page.','በትዕዛዝዎ ገጽ ላይ ወደሚታየው የTelebirr አካውንት ትክክለኛውን መጠን ይላኩ።')],
+  [L2('3. Send your receipt','3. ደረሰኝዎን ይላኩ'),L2('Enter the Telebirr transaction ID (and the receipt photo if asked). Each receipt can be used for one order only.','የTelebirr ግብይት ቁጥሩን (ከተጠየቁ የደረሰኝ ፎቶውንም) ያስገቡ። እያንዳንዱ ደረሰኝ ለአንድ ትዕዛዝ ብቻ ይሠራል።')],
+  [L2('4. We verify','4. እናረጋግጣለን'),L2('Your payment is checked automatically or by our team. Verified orders move to delivery.','ክፍያዎ በራስ-ሰር ወይም በቡድናችን ይረጋገጣል። የተረጋገጠ ትዕዛዝ ወደ ማድረስ ይሄዳል።')],
+  [L2('5. Confirmation code','5. የማረጋገጫ ኮድ'),L2('For coins, Konami sends a verification code to your email. Enter it on your order page quickly; the code expires in about 3 minutes.','ለኮይን፣ Konami የማረጋገጫ ኮድ ወደ ኢሜልዎ ይልካል። በትዕዛዝዎ ገጽ ላይ በፍጥነት ያስገቡት፤ ኮዱ በ3 ደቂቃ አካባቢ ያልቃል።')],
+  [L2('6. Delivery','6. ማድረስ'),L2('Once the code is accepted we deliver your order and mark it as delivered.','ኮዱ ከተቀበለ በኋላ ትዕዛዝዎን አድርሰን እንደደረሰ ምልክት እናደርጋለን።')]]],
+ terms:[L2('Terms of use','የአጠቃቀም ደንቦች'),[
+  [L2('Orders','ትዕዛዞች'),L2('By placing an order you agree to these terms. Please give correct information (email, game ID, phone number). Wrong details can delay or cancel delivery.','ትዕዛዝ ሲልኩ በእነዚህ ደንቦች ይስማማሉ። ትክክለኛ መረጃ (ኢሜል፣ የጨዋታ መታወቂያ፣ ስልክ ቁጥር) ይስጡ። የተሳሳተ መረጃ ማድረስን ሊያዘገይ ወይም ሊሰርዝ ይችላል።')],
+  [L2('Payment','ክፍያ'),L2('Payment is made by Telebirr. We deliver after the payment is verified. Receipts that are fake, edited or already used are rejected.','ክፍያ በTelebirr ነው። ክፍያው ከተረጋገጠ በኋላ እናደርሳለን። የውሸት፣ የተቀየረ ወይም ቀድሞ ጥቅም ላይ የዋለ ደረሰኝ ውድቅ ይሆናል።')],
+  [L2('Prices and offers','ዋጋና ቅናሾች'),L2('Prices are shown in ETB and may change. Discount offers are limited in time and end on the date shown.','ዋጋዎች በብር የሚታዩ ሲሆን ሊቀየሩ ይችላሉ። የቅናሽ ቅናሾች ለተወሰነ ጊዜ ብቻ ሲሆኑ በሚታየው ቀን ያበቃሉ።')],
+  [L2('Delivery','ማድረስ'),L2('Coin orders need you to enter the Konami verification code in time. If the code expires, contact support and we will help you continue.','የኮይን ትዕዛዞች የKonami ማረጋገጫ ኮዱን በጊዜ ማስገባት ይፈልጋሉ። ኮዱ ካለቀ እርዳታን ያነጋግሩ፣ እንዲቀጥሉ እንረዳለን።')],
+  [L2('Accounts and sellers','አካውንቶችና ሻጮች'),L2('Accounts are listed by sellers and reviewed by SAM STORE. Use the in-app chat for deals; do not move payments outside the app.','አካውንቶች በሻጮች ተዘርዝረው በSAM STORE ይገመገማሉ። ለስምምነት የአፑን ውይይት ይጠቀሙ፤ ክፍያን ከአፑ ውጪ አያዙሩ።')],
+  [L2('Problems','ችግሮች'),L2('If something goes wrong, contact support with your order number and we will review it.','ችግር ካጋጠመ የትዕዛዝ ቁጥርዎን ይዘው እርዳታን ያነጋግሩ፤ እንመረምራለን።')]]],
+ security:[L2('Security','ደህንነት'),[
+  [L2('Pay only to the shown account','ወደሚታየው አካውንት ብቻ ይክፈሉ'),L2('Only send money to the Telebirr account shown on your order page in this app.','በዚህ አፕ የትዕዛዝ ገጽ ላይ ወደሚታየው የTelebirr አካውንት ብቻ ገንዘብ ይላኩ።')],
+  [L2('We never ask for your PIN','PIN በፍጹም አንጠይቅም'),L2('SAM STORE staff will never ask for your Telebirr PIN or bank password.','የSAM STORE ሠራተኞች የTelebirr PIN ወይም የባንክ ይለፍ ቃልዎን በፍጹም አይጠይቁም።')],
+  [L2('Codes go on your order page','ኮዶች በትዕዛዝ ገጽ ላይ'),L2('Enter Konami verification codes only on your own order page. Do not share them with anyone else.','የKonami ማረጋገጫ ኮዶችን በራስዎ የትዕዛዝ ገጽ ላይ ብቻ ያስገቡ። ለሌላ ሰው አያጋሩ።')],
+  [L2('Your login details','የመግቢያ መረጃዎ'),L2('Login details you send for an order are visible only to SAM STORE staff and are used only for that order.','ለትዕዛዝ የሚልኩት የመግቢያ መረጃ ለSAM STORE ሠራተኞች ብቻ የሚታይ ሲሆን ለዚያ ትዕዛዝ ብቻ ይጠቅማል።')],
+  [L2('Verified Telegram','የተረጋገጠ Telegram'),L2('Link your Telegram in Profile to get a verified badge and order updates in Telegram.','በProfile ውስጥ Telegram ያገናኙ፤ የተረጋገጠ ምልክት እና የትዕዛዝ ዝመናዎችን በTelegram ያገኛሉ።')],
+  [L2('Beware of impersonators','አስመሳዮችን ይጠንቀቁ'),L2('Real SAM STORE messages come from the Support chat inside this app. Ignore anyone asking for payment elsewhere.','እውነተኛ የSAM STORE መልዕክቶች በዚህ አፕ ውስጥ ካለው የእርዳታ ውይይት ይመጣሉ። ሌላ ቦታ ክፍያ የሚጠይቅን ሰው ችላ ይበሉ።')]]],
+ support:[L2('Support','እርዳታ'),[
+  [L2('Chat with us','ያነጋግሩን'),L2('Open Messages and choose SAM STORE Support. Send your order number so we can help faster.','Messages ን ከፍተው SAM STORE Support ን ይምረጡ። በፍጥነት ለመርዳት የትዕዛዝ ቁጥርዎን ይላኩ።')],
+  [L2('Order problems','የትዕዛዝ ችግሮች'),L2('Open Profile and My orders to see your order status. If it says not verified, message support.','ትዕዛዝዎ ያለበትን ሁኔታ ለማየት Profile እና My orders ን ይክፈቱ። "ያልተረጋገጠ" ካለ ለእርዳታ ይጻፉ።')],
+  [L2('Notifications','ማሳወቂያ'),L2('Turn on notifications in Profile so you do not miss replies or the code request.','መልሶችን ወይም የኮድ ጥያቄን እንዳያልፍዎ በProfile ውስጥ ማሳወቂያ ያብሩ።')]],true]};
+ const p=P[k];if(!p)return;
+ show(`<button class="back" onclick="home()">← ${L2('Back','ተመለስ')}</button><h1>${p[0]}</h1><div class="rows">${p[1].map(x=>`<div class="box"><b>${x[0]}</b><p class="sub" style="margin:6px 0 0">${x[1]}</p></div>`).join('')}</div>${p[2]?`<button class="btn" onclick="msgs()">💬 ${L2('Open support chat','የእርዳታ ውይይት ክፈት')}</button>`:''}`,'')}
+function show(h,t){window.OK=1;clearInterval(T);V.innerHTML=h+FT();document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));scrollTo(0,0);reveal()}
 const isA=c=>c.cat=='player'||c.cat=='manager'||c.cat=='account';
 const row=c=>`<div class="row" onclick="buy(${c.id})"><div class="ic">🪙</div><div style="flex:1"><b>${E(c.label)}</b><br><small>${E(c.title)}</small></div><div class="p">${c.price} ETB</div></div>`;
 const pack=c=>`<div class="pk"><img class="coin pc3d" src="${ci(c.label)}" alt=""><div class="pb"><div class="pt"><b>${E(c.label.split(' ')[0])}</b><small>${(c.region||S.R).toUpperCase()} · ${(c.platform&&c.platform!='all'?c.platform:S.P).toUpperCase()}</small></div><div style="height:10px"></div><div class="pf"><span class="pr">${c.price} ETB</span><button class="btn" onclick="buy(${c.id})">ግዛ</button></div></div></div>`;
